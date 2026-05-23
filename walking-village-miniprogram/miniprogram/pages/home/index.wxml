@@ -4,21 +4,14 @@
 
   <view class="home-content">
     <view class="top-row home-top">
-      <!-- 用户头像/登录入口 -->
-      <button class="user-avatar-btn" hover-class="btn-hover" bindtap="handleUserClick">
-        <image wx:if="{{isLoggedIn && userInfo.avatarUrl}}" class="user-avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill"></image>
-        <view wx:elif="{{isLoggedIn}}" class="user-avatar-fallback">
-          <text>{{userInfo.nickName ? userInfo.nickName[0] : '用'}}</text>
-        </view>
-        <view wx:else class="user-avatar-default">
-          <text>👤</text>
-        </view>
-      </button>
-
-      <!-- 已登录时显示昵称 -->
-      <view wx:if="{{isLoggedIn && userInfo.nickName}}" class="user-name-tag">
-        <text>{{userInfo.nickName}}</text>
-      </view>
+      <!-- <view class="brand-pill home-brand">
+        <image class="brand-logo" src="{{homeConfig.brandLogo}}" mode="aspectFit"></image>
+        <text class="brand-text">{{homeConfig.brandName}}</text>
+      </view> -->
+      <!-- <button class="round-btn user-btn" hover-class="btn-hover" bindtap="handleUserClick">
+        <view class="user-head"></view>
+        <view class="user-body"></view>
+      </button> -->
     </view>
 
     <view class="title-section">
