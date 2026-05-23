@@ -1,0 +1,9 @@
+<view class="page-bg point-page safe-bottom">
+  <view class="top-row"><button class="round-btn back-btn" bindtap="goBack">‹</button><view class="station-pill">第 <text>{{point.order}}</text> 站 / 共 {{route.pointCount}} 站</view></view>
+  <image class="point-hero" src="{{point.image}}" mode="aspectFill"></image><view class="dots"><text></text><text></text><text></text></view>
+  <view class="content"><text class="point-title">{{point.name}} ✨</text><view class="meta"><text>📍 {{point.location}}</text><text>◷ 建议停留 {{point.duration}}</text></view>
+    <view class="soft-card story-card"><view class="card-title">📖 点位故事</view><text class="story-text">{{point.story}}</text><text class="highlight">{{point.highlight}}</text><button class="primary-btn audio-btn" bindtap="goAudio"><text>☻</text><view><text>AI 讲解</text><text class="sub">听听这个地方的故事</text></view><text>›</text></button></view>
+    <view class="soft-card task-card"><view class="card-title">✅ 互动任务</view><view class="task-row"><view class="camera-illus">📷</view><view><text class="task-text">{{point.task}}</text><button class="record-btn" bindtap="goPublish">📷 {{point.taskButtonText}}</button></view></view></view>
+    <button class="primary-btn next-btn" bindtap="goNext" hover-class="btn-hover"><text>➤</text><text>{{isLast?'生成故事报告':'前往下一站'}}</text><text>›</text></button>
+  </view>
+</view>

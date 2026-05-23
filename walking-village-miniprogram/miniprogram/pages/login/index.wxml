@@ -1,0 +1,44 @@
+<view class="login-page">
+  <view class="login-bg"></view>
+
+  <view class="login-content">
+    <view class="title-block">
+      <text class="main-title">会走路的村庄</text>
+      <text class="sub-title">AI 实地叙事导览 Agent</text>
+    </view>
+
+    <view class="welcome-block">
+      <text class="welcome-title">欢迎回来，继续你的村庄故事</text>
+      <text class="welcome-desc">让 AI 带你走进更真实的乡村记忆</text>
+    </view>
+
+    <view class="login-card">
+      <text class="card-title">选择一种方式开始体验</text>
+
+      <button class="login-btn wechat-btn" hover-class="btn-hover" bindtap="handleWechatLogin">
+        <text class="btn-icon">●</text>
+        <view class="btn-texts">
+          <text class="btn-title green">微信登录</text>
+          <text class="btn-desc">保存你的浏览记录和故事报告</text>
+        </view>
+      </button>
+
+      <button class="login-btn guest-btn" hover-class="btn-hover" bindtap="handleGuestLogin">
+        <text class="btn-icon guest-icon">人</text>
+        <view class="btn-texts">
+          <text class="btn-title brown">游客体验</text>
+          <text class="btn-desc">无需登录，随时探索村庄故事</text>
+        </view>
+      </button>
+    </view>
+
+    <view class="tip-card" bindtap="handleTipClick">
+      <view class="tip-illustration"></view>
+      <view class="tip-texts">
+        <text class="tip-title">首次登录将自动创建账号</text>
+        <text class="tip-desc">登录后可保存路线与故事报告</text>
+      </view>
+      <text class="tip-arrow">›</text>
+    </view>
+  </view>
+</view>

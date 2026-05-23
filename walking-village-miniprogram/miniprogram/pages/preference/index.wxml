@@ -1,0 +1,9 @@
+<view class="page-bg pref-page safe-bottom">
+  <view class="top-row"><button class="round-btn back-btn" bindtap="goBack">‹</button><view></view><view></view></view>
+  <view class="title-block"><text class="big-title"><text class="orange-title">选择兴趣</text>与游览时间</text><view class="subtitle-line">告诉 AI 你更想怎么逛村庄</view></view>
+  <image class="pref-hero" src="{{heroImage}}" mode="aspectFill"></image>
+  <view class="soft-card section-card interest-card"><view class="section-head"><view class="section-icon">♥</view><view><text class="section-title">兴趣偏好</text><text class="section-desc">选择你感兴趣的内容，推荐更对味</text></view></view><view class="interest-grid"><block wx:for="{{interests}}" wx:key="name"><view class="choice {{item.checked?'selected':''}}" bindtap="toggleInterest" data-name="{{item.name}}"><text class="choice-icon">{{item.symbol}}</text><text>{{item.name}}</text><view wx:if="{{item.checked}}" class="check">✓</view></view></block></view></view>
+  <view class="soft-card section-card"><view class="section-head"><view class="section-icon">◷</view><view><text class="section-title">游览时间</text><text class="section-desc">选择合适的时长，规划更合理的路线</text></view></view><view class="time-grid"><block wx:for="{{times}}" wx:key="value"><view class="time-choice {{selectedTime===item.value?'selected':''}}" bindtap="selectTime" data-time="{{item.value}}"><text class="time-icon">◷</text><text>{{item.label}}</text><view wx:if="{{selectedTime===item.value}}" class="check">✓</view></view></block></view></view>
+  <view class="summary-card"><image src="{{summaryImage}}"></image><view><text class="summary-title">身份：{{roleLabel}}</text><text class="summary-desc">{{roleDesc}}</text></view></view>
+  <button class="primary-btn generate-btn" hover-class="btn-hover" bindtap="goGenerate"><text>✦</text><text>生成我的路线</text><text>›</text></button>
+</view>

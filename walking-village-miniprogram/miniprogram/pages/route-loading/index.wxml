@@ -1,0 +1,8 @@
+<view class="page-bg loading-page safe-bottom">
+  <view class="top-row"></view>
+  <view class="title-block"><text class="big-title"><text class="orange-title">AI</text> 正在生成路线</text><view class="subtitle-line">AI 实地叙事导览 Agent</view></view>
+  <view class="generate-map soft-card"><text class="map-title">正在为你生成专属村庄路线</text><view class="short-line"></view><image class="map-bg" src="{{mapImage}}" mode="aspectFill"></image><view class="radar r1"></view><view class="radar r2"></view><image class="center-bot" src="{{botImage}}"></image><view class="glow-path"></view><view class="pin p1">⌂</view><view class="pin p2">☕</view><view class="pin p3">⌖</view></view>
+  <view class="choice-summary soft-card"><view><text>👤</text><text>身份：</text><text>{{roleLabel}}</text></view><view><text>♥</text><text>兴趣：</text><text>{{interestText}}</text></view><view><text>◷</text><text>时间：</text><text>{{timeText}}</text></view></view>
+  <view class="skeleton-list"><view class="skeleton"><view></view><view></view><view></view><text class="spin"></text></view><view class="skeleton"><view></view><view></view><view></view><text class="spin"></text></view><view class="skeleton"><view></view><view></view><view></view><text class="spin"></text></view></view>
+  <view class="loading-tip">☻ 正在匹配点位、生成故事任务与讲解内容...</view>
+</view>
