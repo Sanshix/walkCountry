@@ -1,548 +1,341 @@
-# 《会走路的村庄》后端 MVP 技术实现方案
+# 任务：开发"会走路的村庄"后端 MVP，基于腾讯云开发（TCB）
 
-你们这次只做 **2 条路线**，所以后端不要设计成复杂的“智能路线推荐系统”，而应该设计成：
+# 备注： 本任务不是实现 README 中的 FastAPI 后端，而是将 README 描述的产品能力迁移为微信小程序可调用的 TCB 云函数后端 MVP。前端调用方式从 REST API 改为 wx.cloud.callFunction，用户身份从普通 session 改为微信 openid。具体实现思路以本文件描述为准。
 
-> **两条固定主题路线 + 真实村庄点位资料库 + AI 个性化生成 + 用户记录 + 最终报告生成**
+## 项目概述
 
-这样最适合 2 天黑客松，开发快、稳定、好演示、后期也能扩展。
+基于腾讯云开发（CloudBase / TCB）开发后端云函数，为"会走路的村庄"AI 导览小程序提供 API。使用 TCB 云函数 + 文档型数据库 + 云存储，接入微信登录，支持图片上传。
 
----
 
-# 一、后端 MVP 目标
+## 技术栈
 
-你作为后端，需要保证前端可以跑通这条完整链路：
+- 运行环境：TCB 云函数（Node.js 18+）
+- 数据库：TCB 文档型数据库（MongoDB-like）
+- 存储：TCB 云存储
+- 登录：微信登录（TCB 内置鉴权，通过 wx-server-sdk 获取 openid）
+- AI：fetch 调用 OpenAI 兼容 API
+- 依赖：wx-server-sdk
+- 所有需要 HTTP 请求的云函数必须使用 node-fetch@2
 
-```text
-用户选择路线类型
-→ 后端返回推荐路线
-→ 前端进入点位
-→ 后端根据用户身份和点位资料生成故事 / 任务 / 问题
-→ 用户提交点位感受
-→ 后端保存用户记录
-→ 最后生成个人观察报告 / 故事卡
+
+## 目录结构
+
+```
+cloudfunctions/
+├── getRoutes/
+│   ├── index.js
+│   └── package.json
+├── createSession/
+│   ├── index.js
+│   └── package.json
+├── getSpotContent/
+│   ├── index.js
+│   └── package.json
+├── submitNote/
+│   ├── index.js
+│   └── package.json
+├── generateReport/
+│   ├── index.js
+│   └── package.json
+├── getUploadToken/
+│   ├── index.js
+│   └── package.json
+└── _shared/
+    ├── aiService.js
+    ├── prompts.js
+    └── config.js
 ```
 
-这就是后端 MVP 的核心。
+## 数据库集合设计
 
----
-
-# 二、推荐技术栈
-
-考虑你们只有 2 天，我建议后端使用：
-
-## 推荐方案：Node.js + Express + JSON 文件 + 大模型 API
-
-| 模块    | 技术                                | 原因                |
-| ----- | --------------------------------- | ----------------- |
-| 后端框架  | Node.js + Express                 | 开发快，接口简单，和前端联调方便  |
-| 数据存储  | JSON 文件 / 内存对象                    | 黑客松够用，不必一开始上复杂数据库 |
-| 用户会话  | uuid 生成 sessionId                 | 不做登录，也能区分不同用户     |
-| AI 调用 | OpenAI-compatible API / 其他大模型 API | 用于生成点位故事和最终报告     |
-| 跨域    | cors                              | 方便前端本地联调          |
-| 环境变量  | dotenv                            | 管理 API Key        |
-| 二维码   | qrcode                            | 可选，用于生成和扫码点位二维码      |
-
----
-
-# 三、为什么不要一开始上数据库
-
-你们现在的核心不是数据系统，而是演示闭环。
-
-MVP 阶段数据量很小：
-
-* 2 条路线
-* 5～8 个点位
-* 少量用户输入
-* 一份最终报告
-
-所以第一版可以先用：
-
-```text
-data/spots.json
-data/routes.json
-内存 sessions 对象
-```
-
-这样开发最快。
-
-如果第二天还有时间，再加 SQLite 或 MongoDB。
-
----
-
-# 四、后端核心模块设计
-
-后端可以拆成 5 个模块：
-
-```text
-1. 路线模块 Route
-2. 点位模块 Spot
-3. AI 生成模块 AI
-4. 用户会话模块 Session
-5. 报告生成模块 Report
-```
-
----
-
-# 五、两条路线设计
-
-你们现在明确做 2 条路线。
-
-## 路线一：数字游民乡建深度线
-
-### 定位
-
-面向数字游民、乡建研究者、新村民观察者、青年创业者。
-
-### 体验目标
-
-让用户从乡建、空间更新、新村民创业、社区共创的角度理解村庄。
-
-### 建议路线名
-
-## **新村民与乡建观察线**
-
-或者：
-
-## **数字游民的乡建深潜线**
-
-### 点位示例
-
-```text
-村口
-→ 老屋
-→ 公共空间
-→ 咖啡屋 / 民宿
-→ 新村民创业点 / 农场
-```
-
-### 生成内容重点
-
-* 老屋如何被重新使用
-* 新村民为什么来到这里
-* 村庄空间如何被更新
-* 民宿、咖啡、农场如何形成新生活方式
-* 数字游民如何与乡村发生关系
-
----
-
-## 路线二：游客风景人文线
-
-### 定位
-
-面向普通游客、亲子家庭、摄影爱好者、城市白领。
-
-### 体验目标
-
-让用户轻松看风景、了解人文、完成拍照和故事体验。
-
-### 建议路线名
-
-## **风景与乡愁漫游线**
-
-或者：
-
-## **第一次打开村庄的人文风景线**
-
-### 点位示例
-
-```text
-村口
-→ 柿子树 / 植物点
-→ 老屋
-→ 山路 / 星空点
-→ 咖啡屋 / 公共空间
-```
-
-### 生成内容重点
-
-* 看见村庄的自然风景
-* 理解老屋和乡愁
-* 感受植物、季节和生活气息
-* 引导拍照、停留、记录
-* 生成适合传播的故事卡
-
----
-
-# 六、后端目录结构建议
-
-建议项目结构如下：
-
-```text
-village-agent-backend/
-├── package.json
-├── .env
-├── server.js
-├── data/
-│   ├── routes.json
-│   └── spots.json
-├── services/
-│   ├── aiService.js
-│   ├── routeService.js
-│   ├── spotService.js
-│   └── reportService.js
-├── prompts/
-│   ├── spotPrompt.js
-│   └── reportPrompt.js
-├── utils/
-│   └── response.js
-└── README.md
-```
-
----
-
-# 七、核心数据结构设计
-
-## 1. 路线数据 routes.json
-
-```json
-[
-  {
-    "id": "digital_nomad_village_research",
-    "name": "新村民与乡建观察线",
-    "routeType": "digital_nomad",
-    "targetUsers": ["数字游民", "乡建研究者", "青年创业者", "新村民观察者"],
-    "duration": "45分钟",
-    "theme": "从乡建、空间更新和新村民创业角度理解村庄",
-    "description": "这条路线适合想深入理解乡村变化的人。它会带你从村口进入村庄，在老屋、公共空间、民宿和新村民创业点之间，看见传统村落如何被重新使用。",
-    "spotIds": ["village_gate", "old_house", "public_space", "cafe", "new_villager_space"]
-  },
-  {
-    "id": "visitor_scenery_humanities",
-    "name": "风景与乡愁漫游线",
-    "routeType": "visitor",
-    "targetUsers": ["普通游客", "亲子家庭", "摄影爱好者", "城市白领"],
-    "duration": "40分钟",
-    "theme": "看风景、听故事、理解乡村人文",
-    "description": "这条路线适合第一次来到村庄的游客。它会带你看见村口、植物、老屋、山路和公共空间，在轻松漫游中理解村庄的自然与人文。",
-    "spotIds": ["village_gate", "persimmon_tree", "old_house", "mountain_path", "public_space"]
-  }
-]
-```
-
----
-
-## 2. 点位数据 spots.json
-
-每个点位建议这样设计：
-
-```json
-[
-  {
-    "id": "old_house",
-    "name": "老屋",
-    "village": "四坪村",
-    "type": "建筑 / 乡愁 / 乡建",
-    "image": "/images/old_house.jpg",
-    "intro": "这是一栋保留较完整的传统老屋，见证了村庄生活方式的变迁。",
-    "storyMaterial": "老屋曾经是几代人共同生活的空间，如今面临修缮、再利用和公共化的可能。它既是村庄记忆的载体，也是乡建实践中重要的空间资源。",
-    "details": ["木门", "瓦片", "墙面裂纹", "门口台阶", "屋檐阴影"],
-    "tags": ["老屋", "乡愁", "空间更新", "建筑", "乡建"],
-    "suitableRoutes": ["digital_nomad_village_research", "visitor_scenery_humanities"],
-    "defaultTask": "拍下一处你认为最有时间感的细节。",
-    "defaultQuestion": "如果这栋老屋重新被使用，你希望它变成什么？"
-  }
-]
-```
-
----
-
-# 八、用户会话数据结构
-
-不做登录，但要有 sessionId。
-
-用户进入路线后，后端生成一个 session。
-
+### 集合：routes
 ```json
 {
-  "sessionId": "abc123",
+  "_id": "digital_nomad_village_research",
+  "name": "新村民与乡建观察线",
+  "routeType": "digital_nomad",
+  "targetUsers": ["数字游民", "乡建研究者", "青年创业者", "新村民观察者"],
+  "duration": "45分钟",
+  "theme": "从乡建、空间更新和新村民创业角度理解村庄",
+  "description": "这条路线适合想深入理解乡村变化的人。它会带你从村口进入村庄，在老屋、公共空间、民宿和新村民创业点之间，看见传统村落如何被重新使用。",
+  "spotIds": ["village_gate", "old_house", "public_space", "cafe", "new_villager_space"]
+}
+```
+
+第二条路线：
+```json
+{
+  "_id": "visitor_scenery_humanities",
+  "name": "风景与乡愁漫游线",
+  "routeType": "visitor",
+  "targetUsers": ["普通游客", "亲子家庭", "摄影爱好者", "城市白领"],
+  "duration": "40分钟",
+  "theme": "看风景、听故事、理解乡村人文",
+  "description": "这条路线适合第一次来到村庄的游客。它会带你看见村口、植物、老屋、山路和公共空间，在轻松漫游中理解村庄的自然与人文。",
+  "spotIds": ["village_gate", "persimmon_tree", "old_house", "mountain_path", "public_space"]
+}
+```
+
+### 集合：spots
+```json
+{
+  "_id": "village_gate",
+  "name": "村口",
+  "village": "四坪村",
+  "type": "入口 / 标志 / 起点",
+  "image": "cloud://xxx/village_gate.jpg",
+  "intro": "这里是进入四坪村的第一站。村口的老树和石墙标记着村庄的边界，也是外来者与村庄相遇的起点。",
+  "storyMaterial": "四坪村的村口保留着一棵百年老树和一段石砌矮墙。过去，村民从这里出发去赶集、去城里打工；如今，新村民和游客从这里进入村庄，开始一段新的关系。村口既是地理边界，也是心理边界。",
+  "details": ["老树根部的青苔", "石墙上的刻痕", "路面从水泥变为石板的交界", "村口的指示牌", "远处可见的屋顶轮廓"],
+  "tags": ["村口", "边界", "起点", "老树", "石墙"],
+  "suitableRoutes": ["digital_nomad_village_research", "visitor_scenery_humanities"],
+  "defaultTask": "站在村口，观察从哪个细节开始，你感觉自己'进入'了村庄。",
+  "defaultQuestion": "你觉得一个村庄的入口应该给人什么样的感觉？"
+}
+```
+
+其他点位（old_house, public_space, cafe, new_villager_space, persimmon_tree, mountain_path）同样结构，每个都要有完整的中文内容。
+
+**old_house（老屋）**：type "建筑 / 乡愁 / 乡建"，storyMaterial 描述传统民居的木结构、曾经的多代同堂生活、如今的修缮与再利用可能。
+
+**public_space（公共空间）**：type "社区 / 共创 / 乡建"，storyMaterial 描述由旧建筑改造的公共客厅/图书室，新老村民共同使用的场所。
+
+**cafe（咖啡屋）**：type "新业态 / 生活方式 / 创业"，storyMaterial 描述新村民开设的咖啡馆，连接城市生活方式与乡村空间。
+
+**new_villager_space（新村民创业点）**：type "创业 / 农业 / 新村民"，storyMaterial 描述返乡青年或外来创业者的工作空间/农场。
+
+**persimmon_tree（柿子树）**：type "植物 / 季节 / 风景"，storyMaterial 描述村中标志性的柿子树，秋天挂满果实，是村庄时间感的象征。
+
+**mountain_path（山路）**：type "自然 / 步道 / 风景"，storyMaterial 描述连接村庄与山林的步道，可以看到远山和梯田。
+
+### 集合：sessions
+```json
+{
+  "_id": "自动生成",
+  "openid": "微信用户openid",
   "routeId": "digital_nomad_village_research",
   "routeName": "新村民与乡建观察线",
+  "routeTheme": "从乡建、空间更新和新村民创业角度理解村庄",
   "userType": "数字游民",
   "interest": "乡建观察",
   "duration": "45分钟",
   "currentSpotIndex": 0,
   "visitedSpots": [],
-  "notes": [
-    {
-      "spotId": "old_house",
-      "spotName": "老屋",
-      "note": "这栋老屋让我感觉村庄的过去和未来正在交接。"
-    }
-  ]
+  "notes": [],
+  "createdAt": "时间戳",
+  "status": "active"
 }
 ```
 
-MVP 阶段可以先存在内存里：
+### 集合：notes（独立存储，方便查询）
+```json
+{
+  "_id": "自动生成",
+  "sessionId": "session的_id",
+  "openid": "微信用户openid",
+  "spotId": "old_house",
+  "spotName": "老屋",
+  "note": "这栋老屋让我感觉村庄的过去和未来正在交接。",
+  "images": ["cloud://xxx/photo1.jpg", "cloud://xxx/photo2.jpg"],
+  "createdAt": "时间戳"
+}
+```
+
+## 云函数实现
+
+### 通用模式
+
+每个云函数的基本结构：
+```js
+const cloud = require('wx-server-sdk');
+cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
+const db = cloud.database();
+
+exports.main = async (event, context) => {
+  const { OPENID } = cloud.getWXContext();
+  // 业务逻辑
+};
+```
+
+### 1. getRoutes
+触发：前端调用
+逻辑：从 routes 集合查询所有路线，返回列表
+返回：`{ success: true, data: [路线列表] }`
+
+### 2. createSession
+触发：用户选择路线后调用
+入参：`{ routeType, userType, interest, duration }`
+逻辑：
+1. 通过 OPENID 获取用户身份
+2. 根据 routeType 从 routes 集合查询匹配路线（routeType 字段匹配）
+3. 根据路线的 spotIds 从 spots 集合批量查询点位基本信息（id, name, intro, image）
+4. 创建 session 文档写入 sessions 集合
+5. 返回 sessionId、路线信息、点位列表
+
+返回：
+```json
+{
+  "success": true,
+  "data": {
+    "sessionId": "xxx",
+    "route": { "id": "", "name": "", "duration": "", "description": "" },
+    "spots": [{ "id": "", "name": "", "intro": "", "image": "" }]
+  }
+}
+```
+
+### 3. getSpotContent
+入参：`{ sessionId, spotId }`
+逻辑：
+1. 从 sessions 集合查询 session，验证 openid 匹配
+2. 从 spots 集合查询点位完整资料
+3. 调用 AI 生成个性化内容（传入 userType, interest, routeName, routeTheme, 点位资料）
+4. AI 失败时返回兜底内容
+5. 更新 session 的 visitedSpots（如果该 spotId 不在列表中则添加）
+
+返回：
+```json
+{
+  "success": true,
+  "data": {
+    "spotId": "",
+    "spotName": "",
+    "image": "",
+    "intro": "",
+    "aiStory": "",
+    "task": "",
+    "photoTip": "",
+    "question": ""
+  }
+}
+```
+
+### 4. submitNote
+入参：`{ sessionId, spotId, note, images }`
+images 是云存储 fileID 数组（图片由前端直接上传到云存储，这里只存 fileID）
+逻辑：
+1. 验证 session 存在且 openid 匹配
+2. 从 spots 集合获取 spotName
+3. 写入 notes 集合
+4. 同时更新 session.notes 数组（push { spotId, spotName, note, images }）
+
+返回：`{ success: true, message: "记录成功" }`
+
+### 5. generateReport
+入参：`{ sessionId }`
+逻辑：
+1. 查询 session，获取用户信息和路线信息
+2. 查询该 session 的所有 notes
+3. 调用 AI 生成报告
+4. AI 失败时返回兜底报告
+5. 将报告存入 session 文档的 report 字段
+
+返回：
+```json
+{
+  "success": true,
+  "data": {
+    "title": "",
+    "identity": "",
+    "routeName": "",
+    "summary": "",
+    "moments": [],
+    "nextSuggestion": ""
+  }
+}
+```
+
+### 6. getUploadToken（可选，如果前端直传不够用）
+实际上 TCB 小程序端可以直接用 `wx.cloud.uploadFile` 上传，不需要额外的 token 接口。此函数可以不实现，前端直接上传即可。
+
+## AI 调用（_shared/aiService.js）
 
 ```js
-const sessions = {};
-```
+const config = require('./config');
 
-现场演示足够。
-
----
-
-# 九、后端 API 设计
-
-## 1. 健康检查接口
-
-```http
-GET /api/health
-```
-
-返回：
-
-```json
-{
-  "success": true,
-  "message": "Village Agent backend is running"
-}
-```
-
----
-
-## 2. 获取路线列表
-
-```http
-GET /api/routes
-```
-
-作用：前端进入页面时获取两条路线。
-
-返回：
-
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "digital_nomad_village_research",
-      "name": "新村民与乡建观察线",
-      "duration": "45分钟",
-      "theme": "从乡建、空间更新和新村民创业角度理解村庄"
-    },
-    {
-      "id": "visitor_scenery_humanities",
-      "name": "风景与乡愁漫游线",
-      "duration": "40分钟",
-      "theme": "看风景、听故事、理解乡村人文"
-    }
-  ]
-}
-```
-
----
-
-## 3. 创建体验会话 / 生成路线
-
-```http
-POST /api/sessions
-```
-
-请求：
-
-```json
-{
-  "routeType": "digital_nomad",
-  "userType": "数字游民",
-  "interest": "乡建观察",
-  "duration": "45分钟"
-}
-```
-
-后端逻辑：
-
-```text
-1. 根据 routeType 匹配路线
-2. 创建 sessionId
-3. 返回路线信息和点位列表
-```
-
-返回：
-
-```json
-{
-  "success": true,
-  "data": {
-    "sessionId": "abc123",
-    "route": {
-      "id": "digital_nomad_village_research",
-      "name": "新村民与乡建观察线",
-      "duration": "45分钟",
-      "description": "这条路线适合想深入理解乡村变化的人...",
-      "spots": [
-        {
-          "id": "village_gate",
-          "name": "村口",
-          "intro": "这里是进入村庄的第一站。"
-        },
-        {
-          "id": "old_house",
-          "name": "老屋",
-          "intro": "这是一栋保留较完整的传统老屋。"
-        }
-      ]
-    }
+async function callAI(prompt) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  
+  try {
+    const res = await fetch(`${config.AI_BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${config.AI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: config.AI_MODEL,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
+        response_format: { type: 'json_object' }
+      }),
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+    const data = await res.json();
+    return JSON.parse(data.choices[0].message.content);
+  } catch (e) {
+    clearTimeout(timeout);
+    throw e;
   }
 }
+
+module.exports = { callAI };
 ```
 
----
-
-## 4. 获取点位 AI 内容
-
-```http
-GET /api/sessions/:sessionId/spots/:spotId
+### _shared/config.js
+```js
+module.exports = {
+  AI_BASE_URL: process.env.AI_BASE_URL || 'https://api.openai.com/v1',
+  AI_API_KEY: process.env.AI_API_KEY || '',
+  AI_MODEL: process.env.AI_MODEL || 'gpt-4o-mini'
+};
 ```
 
-作用：当前端点击某个点位时，后端生成该点位的个性化内容。
+环境变量在 TCB 云函数配置中设置。
 
-返回：
+## Prompt 模板（_shared/prompts.js）
 
-```json
-{
-  "success": true,
-  "data": {
-    "spotId": "old_house",
-    "spotName": "老屋",
-    "image": "/images/old_house.jpg",
-    "intro": "这是一栋保留较完整的传统老屋，见证了村庄生活方式的变迁。",
-    "aiStory": "你现在站在一栋老屋前。对数字游民来说，它不是一个被遗忘的空间，而是一个值得重新想象的节点...",
-    "task": "请观察这栋老屋中最适合被重新使用的一个角落。",
-    "photoTip": "尝试拍下门、窗、屋檐或墙面纹理，记录它和当代生活之间的距离。",
-    "question": "如果你要在这里发起一个乡村共创项目，你会把它改造成什么？"
-  }
-}
+### generateSpotPrompt({ userType, interest, routeName, routeTheme, spotName, spotIntro, storyMaterial, details, tags })
+
 ```
-
-后端逻辑：
-
-```text
-1. 根据 sessionId 找到用户身份和路线
-2. 根据 spotId 找到点位资料
-3. 调用 AI 生成个性化内容
-4. 如果 AI 失败，返回默认兜底内容
-```
-
----
-
-## 5. 提交点位记录
-
-```http
-POST /api/sessions/:sessionId/notes
-```
-
-请求：
-
-```json
-{
-  "spotId": "old_house",
-  "note": "这栋老屋让我感觉村庄的过去和未来正在交接。"
-}
-```
-
-返回：
-
-```json
-{
-  "success": true,
-  "message": "记录成功"
-}
-```
-
----
-
-## 6. 生成最终报告
-
-```http
-POST /api/sessions/:sessionId/report
-```
-
-作用：用户走完路线后，生成个人报告。
-
-返回：
-
-```json
-{
-  "success": true,
-  "data": {
-    "title": "我和四坪村发生的 5 个瞬间",
-    "identity": "数字游民",
-    "routeName": "新村民与乡建观察线",
-    "summary": "今天，你不是简单地参观四坪村，而是从一个数字游民的视角，看见了老屋、公共空间和新村民生活之间的连接...",
-    "moments": [
-      "在村口，你开始用乡建观察的方式进入村庄。",
-      "在老屋前，你看见了空间再利用的可能。",
-      "在咖啡屋旁，你感受到新村民生活方式正在形成。"
-    ],
-    "nextSuggestion": "下次可以尝试风景与乡愁漫游线，从更轻松的游客视角重新打开这个村庄。"
-  }
-}
-```
-
----
-
-# 十、AI 调用策略
-
-这是后端最重要的部分。
-
-你们不要让 AI 做所有事情。
-
-## 正确策略
-
-```text
-路线选择：规则固定
-点位资料：真实采集
-点位内容：AI 根据资料生成
-最终报告：AI 根据用户记录生成
-```
-
-这样能保证稳定。
-
----
-
-## 点位内容生成 Prompt
-
-```text
-你是“会走路的村庄”的 AI 实地叙事导览 Agent。
+你是"会走路的村庄"的 AI 实地叙事导览 Agent。
 
 请根据游客身份、路线主题和点位资料，生成该点位的导览内容。
 
 要求：
 1. 只能基于提供的点位资料生成，不要编造不存在的历史事实。
 2. 语言要有画面感，但不要过度文学化。
-3. 内容要适合室内路演展示，也适合未来实地扫码使用。
-4. 根据游客身份调整内容重点。
-5. 输出 JSON 格式。
+3. 根据游客身份调整内容重点。
+4. 输出 JSON 格式。
 
-游客身份：{{userType}}
-游客兴趣：{{interest}}
-路线名称：{{routeName}}
-路线主题：{{routeTheme}}
+游客身份：${userType}
+游客兴趣：${interest}
+路线名称：${routeName}
+路线主题：${routeTheme}
 
-点位名称：{{spotName}}
-点位介绍：{{spotIntro}}
-点位故事素材：{{storyMaterial}}
-可观察细节：{{details}}
-点位标签：{{tags}}
+点位名称：${spotName}
+点位介绍：${spotIntro}
+点位故事素材：${storyMaterial}
+可观察细节：${details.join('、')}
+点位标签：${tags.join('、')}
 
 请输出以下 JSON：
 {
   "aiStory": "点位故事，120字以内",
   "task": "一个具体观察任务",
   "photoTip": "一个拍照提示",
-  "question": "一个可以引导游客思考或采访的问题"
+  "question": "一个可以引导游客思考的问题"
 }
 ```
 
----
+### generateReportPrompt({ userType, routeName, routeTheme, spotNames, notes })
 
-## 最终报告生成 Prompt
+```
+你是"会走路的村庄"的 AI 田野观察报告生成器。
 
-```text
-你是“会走路的村庄”的 AI 田野观察报告生成器。
-
-请根据游客路线、经过点位和游客输入，生成一份适合路演展示的个人村庄观察报告。
+请根据游客路线、经过点位和游客输入，生成一份个人村庄观察报告。
 
 要求：
 1. 不要编造游客没有经历的点位。
@@ -551,11 +344,11 @@ POST /api/sessions/:sessionId/report
 4. 字数控制在 300 字以内。
 5. 输出 JSON 格式。
 
-游客身份：{{userType}}
-路线名称：{{routeName}}
-路线主题：{{routeTheme}}
-经过点位：{{spotNames}}
-游客输入：{{notes}}
+游客身份：${userType}
+路线名称：${routeName}
+路线主题：${routeTheme}
+经过点位：${spotNames.join('、')}
+游客输入：${JSON.stringify(notes)}
 
 请输出以下 JSON：
 {
@@ -568,321 +361,162 @@ POST /api/sessions/:sessionId/report
 }
 ```
 
----
+## 兜底机制（关键）
 
-# 十一、兜底机制一定要做
+每个调用 AI 的云函数必须 try/catch：
 
-现场演示最怕 AI 接口失败。
-
-所以你必须做兜底机制。
-
-## 点位内容兜底
-
-如果 AI 调用失败，返回：
-
+点位兜底：
 ```js
-{
-  aiStory: `${spot.name} 是这条路线中的重要点位。它连接了村庄的空间、记忆和当下生活。`,
+const fallback = {
+  aiStory: `${spot.name}是这条路线中的重要点位。它连接了村庄的空间、记忆和当下生活。`,
   task: spot.defaultTask || "请观察这个点位中最吸引你的一个细节。",
   photoTip: "请拍下一处你觉得最能代表这个地方的画面。",
   question: spot.defaultQuestion || "你想给这个地方留下一句什么话？"
-}
+};
 ```
 
----
-
-## 报告兜底
-
-如果 AI 调用失败，返回：
-
+报告兜底：
 ```js
-{
+const fallback = {
   title: "我的村庄观察报告",
-  summary: "这次体验中，你沿着系统生成的路线，经过了多个村庄点位，并留下了自己的观察和感受。这不是一次普通游览，而是一次你和村庄共同生成的故事。",
-  moments: [
-    "你选择了一条属于自己的村庄路线。",
-    "你在点位中完成了观察和记录。",
-    "你为这个村庄留下了一段个人记忆。"
-  ],
+  identity: session.userType,
+  routeName: session.routeName,
+  summary: "这次体验中，你沿着路线经过了多个村庄点位，并留下了自己的观察和感受。这不是一次普通游览，而是一次你和村庄共同生成的故事。",
+  moments: ["你选择了一条属于自己的村庄路线。", "你在点位中完成了观察和记录。", "你为这个村庄留下了一段个人记忆。"],
   nextSuggestion: "下次可以尝试另一条路线，从新的角度重新打开村庄。"
+};
+```
+
+## 数据库初始化脚本
+
+创建一个 initData 云函数（或本地脚本），用于首次部署时向 routes 和 spots 集合写入初始数据。包含完整的两条路线和 7 个点位数据。
+
+## 图片上传说明
+
+前端小程序直接使用 `wx.cloud.uploadFile` 上传图片到云存储，获得 fileID 后传给 submitNote 云函数。后端不需要处理上传逻辑，只需存储和返回 fileID。
+
+## 注意事项
+
+1. 每个云函数是独立部署的，_shared 目录的文件需要在每个用到的云函数中复制一份，或者使用 TCB 的层（layer）功能。实际开发中，建议在每个云函数的 package.json 同级放置需要的共享文件。
+2. wx-server-sdk 的 cloud.init() 必须在每个云函数入口调用。
+3. 数据库操作使用 TCB 的 SDK：db.collection('xxx').doc('id').get() / .add() / .update()
+4. 云函数环境变量在腾讯云控制台 > 云开发 > 云函数 > 对应函数 > 配置中设置 AI_BASE_URL、AI_API_KEY、AI_MODEL。
+
+## 验收标准
+
+1. 所有云函数代码完整，可直接部署
+2. initData 函数包含完整的初始数据
+3. 每个云函数独立可运行，依赖声明完整
+4. AI 未配置时所有接口仍返回兜底内容
+5. 数据库操作正确使用 TCB SDK 语法
+6. 微信登录通过 cloud.getWXContext() 获取 openid，所有写操作验证 openid
+
+～～～～～～～～～～～～～～
+
+## Codex 开发补充要求
+
+本任务是将 README 中的产品能力迁移为微信小程序可调用的 TCB 云函数后端 MVP，不实现 README 中的 FastAPI 后端。
+
+### 实现范围
+
+必须实现以下云函数：
+
+1. getRoutes
+2. createSession
+3. getSpotContent
+4. submitNote
+5. generateReport
+6. initData
+
+不实现 getUploadToken。图片上传由前端使用 wx.cloud.uploadFile 完成。
+
+### 运行环境
+
+- Node 运行环境基于 Node.js 18 LTS
+- 使用 CommonJS
+- 使用 wx-server-sdk
+- 每个云函数必须有自己的 package.json
+- 不使用 TCB layer；共享文件直接复制到需要的云函数目录中
+
+### 返回格式
+
+所有云函数必须返回统一格式：
+
+成功：
+
+{
+  "success": true,
+  "data": {}
 }
-```
 
----
+失败：
 
-# 十二、MVP 开发优先级
+{
+  "success": false,
+  "errorCode": "INVALID_PARAMS",
+  "message": "错误说明"
+}
 
-## P0：必须完成
+AI 失败但使用兜底内容时，仍返回 success: true，并增加：
 
-这些必须第一天跑通。
+{
+  "meta": {
+    "fallback": true
+  }
+}
 
-```text
-1. 后端服务启动
-2. /api/health
-3. /api/routes
-4. /api/sessions
-5. /api/sessions/:sessionId/spots/:spotId
-6. /api/sessions/:sessionId/notes
-7. /api/sessions/:sessionId/report
-8. routes.json
-9. spots.json
-10. AI 失败兜底
-```
+### 权限要求
 
----
+- getRoutes 可不校验 openid
+- createSession 必须使用 cloud.getWXContext() 获取 OPENID
+- getSpotContent、submitNote、generateReport 必须验证 session.openid === OPENID
+- 用户不能访问或修改其他 openid 的 session 和 notes
 
-## P1：有时间再做
+### 数据库要求
 
-```text
-1. 二维码生成
-2. 简单用户历史记录
-3. 报告缓存
-4. 本地文件保存用户输入
-5. 后台点位管理接口
-```
+- initData 必须幂等，多次执行不会重复插入数据
+- routes 至少包含 2 条 MVP 路线
+- spots 必须包含 7 个完整点位：
+  - village_gate
+  - old_house
+  - public_space
+  - cafe
+  - new_villager_space
+  - persimmon_tree
+  - mountain_path
 
----
+### createSession 路线匹配规则
 
-## P2：不要在黑客松做
+1. 如果传入 routeType，优先用 routeType 匹配 routes.routeType
+2. 如果未匹配，则用 userType 命中 routes.targetUsers
+3. 如果仍未匹配，则默认使用 visitor_scenery_humanities
+4. 查询 spots 后必须按照 route.spotIds 的顺序重新排序
 
-```text
-1. 登录注册
-2. 权限管理
-3. 多村庄后台
-4. 复杂地图导航
-5. GPS 到点触发
-6. 支付系统
-7. 完整 SaaS 架构
-8. 图片上传与审核
-9. WebSocket
-10. 复杂推荐算法
-```
+### 参数校验
 
----
+- sessionId、spotId 必须为非空字符串
+- note 最长 500 字
+- images 必须是数组，最多 9 张
+- images 中每一项必须是 cloud:// 开头的 fileID
+- userType、interest、duration 缺失时使用空字符串或默认值
 
-# 十三、第一天后端开发顺序
+### AI 要求
 
-你从 0 开发，可以按这个顺序来。
+- AI_API_KEY 为空时，不调用 AI，直接走兜底
+- AI 请求超时时间 5 秒
+- AI 返回必须解析为 JSON
+- JSON.parse 失败时必须走兜底
+- 不允许因为 AI 失败导致接口失败
 
-## 第一步：初始化项目
+## MVP文档中只是写了2条路线作为示例，实际路线数根据数据情况而变化
 
-```bash
-mkdir village-agent-backend
-cd village-agent-backend
-npm init -y
-npm install express cors dotenv uuid
-npm install nodemon -D
-```
+### 验收方式
 
-如果要调大模型，再装对应 SDK，或者直接用 `fetch` 调 HTTP API。
+Codex 完成后必须输出：
 
----
-
-## 第二步：写基础 server.js
-
-先完成：
-
-```text
-Express 服务
-cors
-json body parser
-/api/health
-```
-
-目标是先让前端能访问。
-
----
-
-## 第三步：写 data/routes.json 和 data/spots.json
-
-先不用 AI，先把两条路线和 5 个点位写死。
-
-目标是：
-
-```text
-GET /api/routes 能返回路线
-POST /api/sessions 能创建体验
-```
-
----
-
-## 第四步：实现 session 逻辑
-
-用内存保存：
-
-```js
-const sessions = {};
-```
-
-创建 session 时保存：
-
-```text
-sessionId
-route
-userType
-interest
-duration
-notes
-```
-
----
-
-## 第五步：实现点位内容接口
-
-先不接 AI，返回固定内容。
-
-等前端能跑通后，再接 AI。
-
----
-
-## 第六步：接入 AI
-
-只接两个地方：
-
-```text
-1. 点位内容生成
-2. 最终报告生成
-```
-
-不要让 AI 负责路线选择。
-
----
-
-## 第七步：加兜底
-
-所有 AI 调用必须 try/catch。
-
-AI 失败时，接口仍然返回成功数据。
-
----
-
-## 第八步：联调前端
-
-确认前端能完成：
-
-```text
-选择路线
-查看点位
-提交感受
-生成报告
-```
-
----
-
-# 十四、后端验收标准
-
-你的后端完成后，至少要满足以下标准：
-
-## 1. 可以启动
-
-```bash
-npm run dev
-```
-
-## 2. 健康检查正常
-
-```http
-GET http://localhost:3000/api/health
-```
-
-## 3. 可以返回两条路线
-
-```http
-GET http://localhost:3000/api/routes
-```
-
-## 4. 可以创建体验会话
-
-```http
-POST http://localhost:3000/api/sessions
-```
-
-## 5. 可以获取点位内容
-
-```http
-GET http://localhost:3000/api/sessions/abc123/spots/old_house
-```
-
-## 6. 可以提交用户感受
-
-```http
-POST http://localhost:3000/api/sessions/abc123/notes
-```
-
-## 7. 可以生成报告
-
-```http
-POST http://localhost:3000/api/sessions/abc123/report
-```
-
-## 8. AI 挂了也不影响演示
-
-这是最重要的。
-
----
-
-# 十五、推荐后端整体实现逻辑
-
-整个后端可以理解成：
-
-```text
-routes.json 负责“路线骨架”
-spots.json 负责“真实村庄内容”
-session 负责“用户本次体验”
-AI 负责“个性化表达”
-report 负责“最终故事闭环”
-```
-
----
-
-# 十六、你们 MVP 的后端边界
-
-你不要试图在后端实现一个很复杂的“真正 Agent”。
-
-黑客松 MVP 里，后端只需要表现出 Agent 感：
-
-```text
-根据用户选择理解意图
-根据路线组织点位
-根据点位资料生成故事
-根据用户输入生成总结
-```
-
-这已经足够让评委理解：
-
-> 这是一个把真实村庄内容转化为个性化漫游体验的 AI Agent。
-
----
-
-# 十七、最终推荐方案总结
-
-你这次后端最适合采用：
-
-> **Node.js + Express + JSON 数据 + Session 内存存储 + 大模型生成 + 兜底文案**
-
-后端核心接口只做 6 个：
-
-```text
-GET  /api/health
-GET  /api/routes
-POST /api/sessions
-GET  /api/sessions/:sessionId/spots/:spotId
-POST /api/sessions/:sessionId/notes
-POST /api/sessions/:sessionId/report
-```
-
-核心数据只做 2 份：
-
-```text
-routes.json：两条路线
-spots.json：5～8 个真实点位
-```
-
-核心 AI 只接 2 个地方：
-
-```text
-点位故事生成
-最终报告生成
-```
-
-这套方案开发量小、稳定性高、非常适合 2 天黑客松落地。下一步建议直接进入后端项目骨架搭建。
+1. 完整目录结构
+2. 每个云函数的 index.js
+3. 每个云函数的 package.json
+4. initData 的完整 2 条 routes 和 7 个 spots 数据
+5. 本地/TCB 部署说明
+6. 每个云函数的调用示例参数和示例返回
