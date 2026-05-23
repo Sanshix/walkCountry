@@ -1,0 +1,8 @@
+<view class="page-bg report-page safe-bottom">
+  <view class="top-row"><button class="round-btn back-btn" bindtap="goBack">‹</button></view>
+  <view class="report-hero"><text class="big-title">你的龙潭村故事报告</text><text class="report-sub">这不是一条路线，而是一段由你参与生成的村庄记忆。</text><image src="{{heroImage}}" mode="aspectFill"></image></view>
+  <view class="stats soft-card"><view><text>身份</text><text>{{roleLabel}}</text></view><view><text>走过的路线</text><text>{{route.routeName}}</text></view><view><text>访问点位数量</text><text>{{route.pointCount}} 个</text></view><view><text>总时长</text><text>{{route.totalDuration}}</text></view></view>
+  <view class="soft-card summary"><text class="section-title">✦ 个人故事摘要</text><text class="summary-text">{{summary}}</text></view>
+  <view class="soft-card moments"><text class="section-title">✦ 精彩瞬间</text><view class="moment-list"><block wx:for="{{moments}}" wx:key="title"><view class="moment"><image src="{{item.image}}" mode="aspectFill"></image><text class="m-title">{{item.title}}</text><text class="m-desc">{{item.desc}}</text></view></block></view><view class="dots"><text></text><text></text><text></text></view></view>
+  <view class="report-actions"><button class="primary-btn share" bindtap="shareReport">↗ 分享报告</button><button class="again" bindtap="restart">↻ 再走一次</button></view>
+</view>

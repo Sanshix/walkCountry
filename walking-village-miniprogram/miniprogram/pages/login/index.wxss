@@ -1,0 +1,211 @@
+page {
+  min-height: 100%;
+  background: #fff4e3;
+}
+
+view,
+text,
+button {
+  box-sizing: border-box;
+}
+
+button {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  line-height: 1;
+}
+
+button::after {
+  border: none;
+}
+
+.login-page {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(180deg, #fff8ea 0%, #f9dfaa 46%, #fff7e8 100%);
+}
+
+.login-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(255, 216, 122, 0.45), transparent 280rpx),
+    linear-gradient(180deg, rgba(255, 246, 225, 0.25), rgba(255, 246, 225, 0.92));
+}
+
+.login-content {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  padding: 180rpx 44rpx 60rpx;
+}
+
+.title-block {
+  text-align: center;
+}
+
+.main-title {
+  display: block;
+  color: #8a3a0c;
+  font-size: 76rpx;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: 2rpx;
+}
+
+.sub-title {
+  display: block;
+  margin-top: 18rpx;
+  color: #5a2f14;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.welcome-block {
+  margin-top: 360rpx;
+  text-align: center;
+}
+
+.welcome-title {
+  display: block;
+  color: #5a2f14;
+  font-size: 34rpx;
+  font-weight: 900;
+}
+
+.welcome-desc {
+  display: block;
+  margin-top: 24rpx;
+  color: rgba(86, 54, 31, 0.68);
+  font-size: 28rpx;
+}
+
+.login-card {
+  width: 660rpx;
+  margin: 64rpx auto 0;
+  padding: 52rpx 48rpx 46rpx;
+  border-radius: 44rpx;
+  background: #fffaf0;
+  box-shadow: 0 24rpx 50rpx rgba(99, 65, 26, 0.14);
+}
+
+.card-title {
+  display: block;
+  margin-bottom: 40rpx;
+  color: rgba(82, 54, 34, 0.72);
+  font-size: 28rpx;
+  text-align: center;
+}
+
+.login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 564rpx;
+  height: 126rpx;
+  border-radius: 34rpx;
+  background: rgba(255, 253, 247, 0.9);
+}
+
+.wechat-btn {
+  border: 3rpx solid rgba(52, 137, 36, 0.76);
+}
+
+.guest-btn {
+  margin-top: 28rpx;
+  border: 3rpx solid rgba(185, 111, 38, 0.62);
+}
+
+.btn-icon {
+  width: 76rpx;
+  margin-right: 30rpx;
+  color: #2f8c28;
+  font-size: 54rpx;
+  text-align: center;
+}
+
+.guest-icon {
+  color: #6a3615;
+  font-size: 42rpx;
+}
+
+.btn-texts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 330rpx;
+}
+
+.btn-title {
+  font-size: 42rpx;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.green {
+  color: #2e8427;
+}
+
+.brown {
+  color: #5a2f14;
+}
+
+.btn-desc {
+  margin-top: 20rpx;
+  color: rgba(94, 67, 45, 0.62);
+  font-size: 27rpx;
+  white-space: nowrap;
+}
+
+.tip-card {
+  display: flex;
+  align-items: center;
+  width: 660rpx;
+  min-height: 126rpx;
+  margin: 54rpx auto 0;
+  padding: 22rpx 34rpx;
+  border: 2rpx solid rgba(228, 169, 92, 0.38);
+  border-radius: 32rpx;
+  background: rgba(255, 250, 239, 0.9);
+  box-shadow: 0 16rpx 34rpx rgba(94, 61, 25, 0.08);
+}
+
+.tip-illustration {
+  width: 100rpx;
+  height: 78rpx;
+  margin-right: 28rpx;
+  border-radius: 20rpx;
+  background: linear-gradient(135deg, #ffe0a6, #f6b85e);
+}
+
+.tip-texts {
+  flex: 1;
+}
+
+.tip-title {
+  display: block;
+  color: #5a2f14;
+  font-size: 29rpx;
+  font-weight: 900;
+}
+
+.tip-desc {
+  display: block;
+  margin-top: 14rpx;
+  color: rgba(95, 68, 45, 0.68);
+  font-size: 26rpx;
+}
+
+.tip-arrow {
+  color: #5a2f14;
+  font-size: 54rpx;
+}
+
+.btn-hover {
+  transform: scale(0.982);
+  opacity: 0.9;
+}

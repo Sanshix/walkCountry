@@ -1,0 +1,19 @@
+<view class="page-bg identity-page safe-bottom">
+  <view class="top-row"><button class="round-btn back-btn" bindtap="goBack">‹</button>
+  <!-- <view class="brand-pill"><image class="brand-logo" src="{{brandLogo}}"></image><text class="brand-text">会走路的村庄</text></view>
+  <view class="spacer"></view> -->
+  </view>
+  <view class="title-block"><text class="big-title"><text class="orange-title">选择你的</text>身份画像</text><view class="subtitle-line">不同身份，将开启不同的村庄叙事路线</view></view>
+  <view class="hero-strip"><image src="{{heroImage}}" mode="aspectFill"></image><view class="strip-pin"></view></view>
+  <view class="role-list">
+    <block wx:for="{{roles}}" wx:key="value">
+      <view class="role-card {{selectedRole===item.value?'active':''}}" bindtap="selectRole" data-role="{{item.value}}">
+        <image class="role-icon" src="{{item.icon}}"></image>
+        <view class="role-text"><text class="role-title">{{item.label}}</text><text class="role-desc">{{item.desc}}</text></view>
+        <view class="radio {{selectedRole===item.value?'checked':''}}"><text wx:if="{{selectedRole===item.value}}">✓</text></view>
+      </view>
+    </block>
+  </view>
+  <view class="progress"><view class="bar active"></view><view class="bar"></view><view class="bar"></view><view class="bar"></view><text>1/4</text></view>
+  <button class="primary-btn next-btn" hover-class="btn-hover" bindtap="goNext"><text>下一步</text><text>›</text></button>
+</view>

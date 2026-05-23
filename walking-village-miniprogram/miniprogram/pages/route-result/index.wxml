@@ -1,0 +1,9 @@
+<view class="page-bg result-page safe-bottom">
+  <view class="top-row">
+    <button class="round-btn back-btn" bindtap="goBack">‹</button></view>
+  <text class="big-title result-title">你的专属路线已生成</text>
+  <view class="route-panel soft-card"><view class="route-info"><text class="route-name">{{route.routeName}}</text><view class="tags"><text>◷ 总时长 {{route.totalDuration}}</text><text>⌖ {{route.pointCount}} 个点位</text></view><text class="route-desc">{{route.routeDesc}}</text></view><view class="map-card"><image src="{{route.mapImage}}" mode="aspectFill"></image><view class="map-line"></view><block wx:for="{{route.points}}" wx:key="id"><view class="map-pin pin-{{index}}">{{item.order}}</view></block></view>
+    <view class="point-list"><block wx:for="{{route.points}}" wx:key="id"><view class="point-item" bindtap="openPoint" data-id="{{item.id}}"><image src="{{item.image}}" mode="aspectFill"></image><view class="order-dot">{{item.order}}</view><view class="point-info"><text class="point-name">{{item.name}}</text><text class="point-sub">{{item.subtitle}}</text></view><text class="duration">◷ {{item.duration}}</text></view></block></view>
+    <button class="primary-btn start-btn" bindtap="startRoute" hover-class="btn-hover"><text>✦</text><text>开始游览</text></button>
+  </view>
+</view>
