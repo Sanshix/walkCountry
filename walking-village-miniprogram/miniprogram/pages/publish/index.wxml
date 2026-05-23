@@ -1,0 +1,8 @@
+<view class="page-bg publish-page safe-bottom">
+  <view class="top-row"><button class="round-btn back-btn" bindtap="goBack">‹</button></view>
+  <view class="publish-title"><text class="big-title">发表此刻感受</text><view class="subtitle-line">与同行者一起记录村庄瞬间</view></view>
+  <view class="soft-card publish-box"><textarea maxlength="180" value="{{content}}" bindinput="onInput" placeholder="写下你此刻的村庄感受……"></textarea><view class="publish-actions"><button class="add-photo" bindtap="addImage">📷\n添加图片\n({{photoCount}}/4)</button><button class="primary-btn publish-btn" bindtap="publish"><text>✦</text><text>发布</text><text>✦</text></button></view></view>
+  <view class="share-title">· 村庄此刻 · 大家在分享 ·</view>
+  <block wx:for="{{posts}}" wx:key="id"><view class="post-card"><view class="post-head"><image src="{{item.avatar}}"></image><view><text class="name">{{item.name}} <text class="tag">同行者</text></text><text class="time">{{item.time}}</text></view><text class="point-tag">📍 {{item.point}}</text></view><text class="post-text">{{item.text}}</text><image wx:if="{{item.photo}}" class="post-photo" src="{{item.photo}}" mode="aspectFill"></image><view class="post-actions"><button bindtap="like" data-id="{{item.id}}">👍 点赞 {{item.likes}}</button><button>💬 评论 {{item.comments}}</button><button>☆ 收藏 {{item.collects}}</button></view></view></block>
+  <view class="footer-text">记录更多美好，遇见更多同行的你</view>
+</view>

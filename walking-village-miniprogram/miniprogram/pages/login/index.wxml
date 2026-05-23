@@ -1,0 +1,88 @@
+<view class="login-page">
+
+<image
+  wx:if="{{bgOk}}"
+  class="page-bg"
+  src="{{assets.bg}}"
+  mode="aspectFill"
+  binderror="onBgError"
+/>
+
+<view class="bg-fallback"></view>
+<view class="page-mask"></view>
+
+<view class="capsule-safe" style="{{safeTopStyle}}"></view>
+
+<view class="title-section">
+  <image
+    wx:if="{{titleOk}}"
+    class="title-img"
+    src="{{assets.logoTitle}}"
+    mode="widthFix"
+    binderror="onTitleError"
+  />
+
+  <view wx:else class="title-fallback">
+    <text class="main-title">会走路的村庄</text>
+    <view class="subtitle-row">
+      <view class="line"></view>
+      <text class="subtitle">AI 实地叙事导览 Agent</text>
+      <view class="line"></view>
+    </view>
+  </view>
+</view>
+
+<view class="welcome-section">
+  <view class="leaf-line">
+    <text class="leaf">⌞</text>
+    <text class="welcome-title">欢迎回来，继续你的村庄故事</text>
+    <text class="leaf">⌝</text>
+  </view>
+  <text class="welcome-desc">让 AI 带你走进更真实的乡村记忆</text>
+</view>
+
+<view class="login-card">
+  <view class="card-title-row">
+    <view class="card-line"></view>
+    <text class="card-title">选择一种方式开始体验</text>
+    <view class="card-line"></view>
+  </view>
+
+  <button class="login-option wechat-option" hover-class="option-hover" bindtap="handleWechatLogin">
+      <text class="option-title wechat-title">微信登录</text>
+  </button>
+
+  <button class="login-option guest-option" hover-class="option-hover" bindtap="handleGuestLogin">
+      <text class="option-title guest-title">游客体验</text>
+  </button>
+  <button class="login-option guest-option" hover-class="option-hover" bindtap="handleGuestLogin">
+      <text class="option-title guest-title">semi登录</text>
+  </button>
+</view>
+
+<button class="tip-card" hover-class="tip-hover" bindtap="handleTipClick">
+  <view class="road-illustration">
+    <image
+      wx:if="{{roadOk}}"
+      class="road-img"
+      src="{{assets.roadCard}}"
+      mode="aspectFill"
+      binderror="onRoadError"
+    />
+    <view wx:else class="road-css">
+      <view class="road-pin"></view>
+      <view class="road-path"></view>
+      <view class="road-tree tree-a"></view>
+      <view class="road-tree tree-b"></view>
+    </view>
+  </view>
+
+  <view class="tip-texts">
+    <text class="tip-title">首次登录将自动创建账号</text>
+    <text class="tip-desc">登录后可保存路线与故事报告</text>
+  </view>
+
+  <text class="tip-arrow">›</text>
+</button>
+
+</view>

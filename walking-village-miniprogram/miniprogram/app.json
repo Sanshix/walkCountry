@@ -1,0 +1,24 @@
+{
+  "pages": [
+    "pages/login/index",
+    "pages/home/index",
+    "pages/identity/index",
+    "pages/preference/index",
+    "pages/route-loading/index",
+    "pages/route-result/index",
+    "pages/point-detail/index",
+    "pages/ai-audio/index",
+    "pages/publish/index",
+    "pages/report/index"
+  ],
+  "window": {
+    "navigationStyle": "custom",
+    "navigationBarTitleText": "会走路的村庄",
+    "navigationBarBackgroundColor": "#fff8ed",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#fff8ed"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

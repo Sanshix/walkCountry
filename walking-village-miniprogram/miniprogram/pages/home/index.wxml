@@ -1,0 +1,89 @@
+<view class="home-page safe-bottom">
+  <image wx:if="{{!pageBgError}}" class="page-bg-img" src="{{homeConfig.pageBg}}" mode="aspectFill" binderror="onPageBgError"></image>
+  <view class="page-bg-fallback"></view>
+
+  <view class="home-content">
+    <view class="top-row home-top">
+      <!-- <view class="brand-pill home-brand">
+        <image class="brand-logo" src="{{homeConfig.brandLogo}}" mode="aspectFit"></image>
+        <text class="brand-text">{{homeConfig.brandName}}</text>
+      </view> -->
+      <!-- <button class="round-btn user-btn" hover-class="btn-hover" bindtap="handleUserClick">
+        <view class="user-head"></view>
+        <view class="user-body"></view>
+      </button> -->
+    </view>
+
+    <view class="title-section">
+      <image wx:if="{{!titleImageError}}" class="main-title-img" src="{{homeConfig.titleImage}}" mode="aspectFit" binderror="onTitleImageError"></image>
+      <view wx:else class="title-text-fallback">
+        <text class="home-main-title">{{homeConfig.mainTitle}}</text>
+        <view class="subtitle-line">{{homeConfig.subtitle}}</view>
+      </view>
+    </view>
+
+    <view class="hero-card">
+      <image wx:if="{{!heroImageError}}" class="hero-img" src="{{homeConfig.heroImage}}" mode="aspectFill" binderror="onHeroError"></image>
+      <view wx:else class="hero-fallback"></view>
+      <view class="hero-warm-mask"></view>
+
+      <view class="hero-copy">
+        <text>{{homeConfig.heroCopyLine1}}</text>
+        <text>{{homeConfig.heroCopyLine2}}</text>
+        <view class="copy-line"></view>
+      </view>
+
+      <image class="route-overlay" src="{{homeConfig.routeOverlay}}" mode="aspectFill"></image>
+
+      <view class="ai-radar"></view>
+      <image class="home-ai-bot" src="{{homeConfig.aiBot}}" mode="aspectFit"></image>
+      <image class="home-pin" src="{{homeConfig.endPin}}" mode="aspectFit"></image>
+      <view class="node node1"></view>
+      <view class="node node2"></view>
+      <view class="node node3"></view>
+    </view>
+    <view class="bottom-bgBox">
+    <view class="intro-block">
+      <view class="intro-texts">
+        <text>{{homeConfig.introLine1}}</text>
+        <text>{{homeConfig.introLine2}}</text>
+        <text>{{homeConfig.introLine3}}</text>
+      </view>
+      <view class="mini-route">
+        <image class="route-img" src="{{homeConfig.heroRightImg}}" mode="aspectFit"></image>
+        <!-- <view class="mini-route-halo"></view>
+        <view class="mini-pin"></view>
+        <view class="mini-road"></view>
+        <view class="mini-house"></view>
+        <view class="mini-tree"></view> -->
+      </view>
+    </view>
+
+    <button class="primary-btn home-primary" hover-class="btn-hover" bindtap="goIdentity">
+      <text class="spark">✦</text>
+      <text>{{homeConfig.primaryButtonText}}</text>
+      <text class="arrow">›</text>
+    </button>
+
+    <button class="guide-btn" hover-class="btn-hover" bindtap="goGuideEntrance">
+      <text class="guide-robot">☻</text>
+      <text>{{homeConfig.secondaryButtonText}}</text>
+      <text class="guide-arrow">›</text>
+    </button>
+
+    <view class="features">
+      <block wx:for="{{homeConfig.featureCards}}" wx:key="title">
+        <view class="feature-card">
+          <image class="feature-icon" src="{{item.icon}}" mode="aspectFit"></image>
+          <view class="feature-texts">
+            <text class="feature-title">{{item.title}}</text>
+            <text class="feature-desc">{{item.desc}}</text>
+          </view>
+        </view>
+      </block>
+      <view class="feature-link link-one"></view>
+      <view class="feature-link link-two"></view>
+    </view>
+  </view>
+  </view>
+</view>

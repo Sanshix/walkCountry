@@ -1,0 +1,445 @@
+page {
+  min-height: 100%;
+  background: #fff7e8;
+}
+
+view,
+text,
+image,
+button {
+  box-sizing: border-box;
+}
+
+button {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  line-height: 1;
+}
+
+button::after {
+  border: none;
+}
+
+.login-page {
+  position: relative;
+  min-height: 100vh;
+  padding: 0 0 calc(52rpx + env(safe-area-inset-bottom));
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 10%, #fff8e9 0%, #fff0d4 45%, #f7dfad 100%);
+}
+
+.page-bg,
+.bg-fallback,
+.page-mask {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.page-bg {
+  z-index: 1;
+}
+
+.bg-fallback {
+  z-index: 0;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(255, 226, 154, 0.58) 0 120rpx, transparent 260rpx),
+    linear-gradient(180deg, #fff8ea 0%, #f9dfaa 46%, #fff7e8 70%, #f4d99d 100%);
+}
+
+.page-mask {
+  z-index: 2;
+  background:
+    linear-gradient(180deg, rgba(255, 247, 232, 0.10) 0%, rgba(255, 246, 228, 0.12) 34%, rgba(255, 248, 235, 0.76) 56%, rgba(255, 246, 232, 0.92) 100%);
+  pointer-events: none;
+}
+
+.capsule-safe {
+  position: relative;
+  z-index: 5;
+}
+
+.title-section {
+  position: relative;
+  z-index: 6;
+  width: 100%;
+  margin-top: 28rpx;
+  text-align: center;
+}
+
+.title-img {
+  display: block;
+  width: 690rpx;
+  margin: 0 auto;
+}
+
+.title-fallback {
+  width: 100%;
+  text-align: center;
+}
+
+.main-title {
+  display: block;
+  color: #8a3a0c;
+  font-size: 82rpx;
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: 2rpx;
+  text-shadow: 0 8rpx 26rpx rgba(119, 60, 17, 0.14);
+}
+
+.subtitle-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 16rpx;
+}
+
+.line {
+  width: 104rpx;
+  height: 4rpx;
+  border-radius: 99rpx;
+  background: linear-gradient(90deg, transparent, #ef7b13, transparent);
+}
+
+.subtitle {
+  margin: 0 20rpx;
+  color: #573019;
+  font-size: 31rpx;
+  font-weight: 600;
+}
+
+.welcome-section {
+  position: relative;
+  z-index: 6;
+  margin-top: 354rpx;
+  text-align: center;
+}
+
+.leaf-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.leaf {
+  margin: 0 18rpx;
+  color: #9a8b55;
+  font-size: 30rpx;
+}
+
+.welcome-title {
+  color: #5a2f14;
+  font-size: 34rpx;
+  font-weight: 900;
+  letter-spacing: 2rpx;
+}
+
+.welcome-desc {
+  display: block;
+  margin-top: 24rpx;
+  color: rgba(86, 54, 31, 0.68);
+  font-size: 28rpx;
+  font-weight: 500;
+  letter-spacing: 2rpx;
+}
+
+.login-card {
+  position: relative;
+  z-index: 7;
+  width: 660rpx;
+  margin: 64rpx auto 0;
+  padding: 52rpx 48rpx 46rpx;
+  border-radius: 44rpx;
+  background: #fffaf0;
+  box-shadow:
+    0 24rpx 50rpx rgba(99, 65, 26, 0.14),
+    inset 0 1rpx 0 rgba(255, 255, 255, 0.92);
+}
+
+.card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40rpx;
+}
+
+.card-line {
+  width: 92rpx;
+  height: 2rpx;
+  background: rgba(128, 91, 62, 0.28);
+}
+
+.card-line::after {
+  content: "";
+  display: block;
+  width: 7rpx;
+  height: 7rpx;
+  margin: -2rpx auto 0;
+  border-radius: 50%;
+  background: rgba(128, 91, 62, 0.44);
+}
+
+.card-title {
+  margin: 0 22rpx;
+  color: rgba(82, 54, 34, 0.72);
+  font-size: 28rpx;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.login-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 564rpx;
+  height: 126rpx;
+  text-align: center;
+  border-radius: 34rpx;
+  background: rgba(255, 253, 247, 0.88);
+}
+
+.wechat-option {
+  border: 3rpx solid rgba(52, 137, 36, 0.76);
+  color: #2f7d25;
+}
+
+.guest-option {
+  margin-top: 28rpx;
+  border: 3rpx solid rgba(185, 111, 38, 0.62);
+  color: #5a2f14;
+}
+
+.wechat-icon {
+  position: relative;
+  width: 76rpx;
+  height: 56rpx;
+  margin-right: 30rpx;
+}
+
+.wechat-bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: #2f8c28;
+}
+
+.bubble-a {
+  left: 3rpx;
+  top: 8rpx;
+  width: 45rpx;
+  height: 36rpx;
+}
+
+.bubble-b {
+  right: 3rpx;
+  top: 18rpx;
+  width: 40rpx;
+  height: 32rpx;
+}
+
+.bubble-a::before,
+.bubble-a::after,
+.bubble-b::before,
+.bubble-b::after {
+  content: "";
+  position: absolute;
+  top: 12rpx;
+  width: 6rpx;
+  height: 6rpx;
+  border-radius: 50%;
+  background: #fffaf0;
+}
+
+.bubble-a::before {
+  left: 12rpx;
+}
+
+.bubble-a::after {
+  left: 25rpx;
+}
+
+.bubble-b::before {
+  left: 10rpx;
+}
+
+.bubble-b::after {
+  left: 23rpx;
+}
+
+.guest-icon {
+  position: relative;
+  width: 76rpx;
+  height: 72rpx;
+  margin-right: 32rpx;
+}
+
+.guest-head {
+  position: absolute;
+  top: 4rpx;
+  left: 22rpx;
+  width: 32rpx;
+  height: 32rpx;
+  border: 6rpx solid #6a3615;
+  border-radius: 50%;
+}
+
+.guest-body {
+  position: absolute;
+  left: 12rpx;
+  bottom: 5rpx;
+  width: 52rpx;
+  height: 32rpx;
+  border: 6rpx solid #6a3615;
+  border-top: none;
+  border-radius: 0 0 30rpx 30rpx;
+}
+
+.option-texts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 330rpx;
+}
+
+.option-title {
+  display: block;
+  font-size: 42rpx;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  text-align: center !important;
+  letter-spacing: 2rpx;
+}
+
+.wechat-title {
+  color: #2e8427;
+}
+
+.guest-title {
+  color: #5a2f14;
+}
+
+.option-desc {
+  display: block;
+  margin-top: 20rpx;
+  color: rgba(94, 67, 45, 0.62);
+  font-size: 27rpx;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.tip-card {
+  position: relative;
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  width: 660rpx !important;
+  min-height: 126rpx;
+  margin: 54rpx auto 0;
+  padding: 22rpx 34rpx;
+  border: 2rpx solid rgba(228, 169, 92, 0.38);
+  border-radius: 32rpx;
+  background: rgba(255, 250, 239, 0.90);
+  box-shadow: 0 16rpx 34rpx rgba(94, 61, 25, 0.08);
+}
+
+.road-illustration {
+  position: relative;
+  flex-shrink: 0;
+  width: 110rpx;
+  height: 84rpx;
+  margin-right: 32rpx;
+  overflow: hidden;
+  border-radius: 20rpx;
+  background: #fff2d7;
+}
+
+.road-img {
+  width: 100%;
+  height: 100%;
+}
+
+.road-css {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.road-path {
+  position: absolute;
+  left: 18rpx;
+  bottom: 16rpx;
+  width: 78rpx;
+  height: 38rpx;
+  border-bottom: 7rpx solid #f4a24a;
+  border-radius: 50%;
+  transform: rotate(-8deg);
+}
+
+.road-pin {
+  position: absolute;
+  left: 32rpx;
+  top: 10rpx;
+  width: 24rpx;
+  height: 32rpx;
+  border-radius: 50% 50% 50% 0;
+  background: #ff8a13;
+  transform: rotate(-45deg);
+}
+
+.road-tree {
+  position: absolute;
+  width: 28rpx;
+  height: 28rpx;
+  border-radius: 50%;
+  background: #81a85c;
+}
+
+.tree-a {
+  right: 18rpx;
+  top: 20rpx;
+}
+
+.tree-b {
+  right: 38rpx;
+  top: 32rpx;
+  background: #a2bd68;
+}
+
+.tip-texts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.tip-title {
+  color: #5a2f14;
+  font-size: 29rpx;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.tip-desc {
+  margin-top: 14rpx;
+  color: rgba(95, 68, 45, 0.68);
+  font-size: 26rpx;
+  line-height: 1.25;
+}
+
+.tip-arrow {
+  margin-left: 16rpx;
+  color: #5a2f14;
+  font-size: 54rpx;
+  line-height: 1;
+}
+
+.option-hover,
+.tip-hover {
+  transform: scale(0.982);
+  opacity: 0.9;
+}
