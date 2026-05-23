@@ -1,0 +1,21 @@
+{
+  "name": "walking-village-tcb-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "会走路的村庄 TCB 云函数后端 MVP，含本地 mock 运行环境",
+  "type": "commonjs",
+  "scripts": {
+    "init": "node local-dev/run.js initData",
+    "test:getRoutes": "node local-dev/run.js getRoutes --preset",
+    "test:createSession": "node local-dev/run.js createSession --preset",
+    "test:getSpotContent": "node local-dev/run.js getSpotContent --preset",
+    "test:submitNote": "node local-dev/run.js submitNote --preset",
+    "test:generateReport": "node local-dev/run.js generateReport --preset",
+    "test:semiLogin": "node local-dev/run.js semiAuthLogin --preset",
+    "test:all": "node local-dev/testAll.js",
+    "reset:local": "node local-dev/resetDb.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
