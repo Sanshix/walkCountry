@@ -1350,4 +1350,357 @@ Codex 最终输出中必须包含简洁部署说明：
 8. 调用 `generateReport` 生成最终观察报告。
 
 所有步骤在未配置 AI 的情况下也必须可跑通，只是返回兜底内容。
+本项目同时需要支持 TCB 云函数部署和本地 mock 运行。TCB 版本用于真实小程序部署，本地 mock 版本用于我在本地不依赖微信开发者工具即可验证业务流程。
 
+
+
+
+
+乡建数字身份 / Semi 登录体系兼容调整方案
+1. 接入结论
+
+乡建数字身份 / Semi 登录体系应按照 OAuth2 Authorization Code Flow + PKCE 的方式接入。
+
+本次接入不是简单的前端跳转登录，也不是传统的手机号、邮箱验证码登录，而是引入一个第三方身份提供方。系统需要在现有登录体系之外，新增一套外部身份登录与账号绑定能力。
+
+整体接入方式为：
+
+前端展示 Semi 登录入口
+  ↓
+跳转到我方后端登录接口
+  ↓
+我方后端生成 state 和 PKCE 参数
+  ↓
+跳转到 Semi 授权页
+  ↓
+Semi 回调我方后端
+  ↓
+我方后端使用 code 换取 token
+  ↓
+我方后端获取 Semi 用户信息
+  ↓
+绑定或创建本地用户
+  ↓
+签发我方系统自己的登录态
+  ↓
+跳转回前端业务页面
+
+因此，本方案需要 前端和后端共同改造，但核心安全逻辑必须放在后端完成。
+
+2. 前端改造内容
+
+前端主要负责登录入口展示和页面跳转，不直接参与 token 交换，也不保存 Semi 的 client_secret。
+
+前端需要新增：
+
+1. “使用乡建数字身份 / Semi 登录”按钮
+2. 点击后跳转到我方后端登录入口
+3. 登录成功后接收后端跳转结果
+4. 登录失败时展示错误提示
+
+推荐前端登录入口：
+
+GET /auth/semi/login
+
+前端点击按钮后，不直接跳转 Semi 授权地址，而是跳转到我方后端：
+
+window.location.href = "/auth/semi/login";
+
+登录完成后，由后端签发我方系统自己的登录态，再跳转回前端页面，例如：
+
+/login/success
+/dashboard
+
+前端不应该做以下事情：
+
+1. 不保存 client_secret
+2. 不直接请求 Semi token 接口
+3. 不直接持久化 Semi access_token
+4. 不直接使用 Semi token 作为我方业务接口凭证
+3. 后端改造内容
+
+后端是本次接入的核心，需要新增完整的 OAuth2 登录流程。
+
+后端需要新增以下接口：
+
+GET /auth/semi/login
+GET /auth/semi/callback
+POST /auth/semi/unbind
+POST /auth/semi/refresh
+
+其中核心流程为：
+
+3.1 发起登录
+
+/auth/semi/login 负责：
+
+1. 生成 state
+2. 生成 code_verifier
+3. 根据 code_verifier 生成 code_challenge
+4. 临时保存 state 和 code_verifier
+5. 302 跳转到 Semi 授权页
+
+授权请求需要包含：
+
+client_id
+redirect_uri
+response_type=code
+scope=openid profile
+state
+code_challenge
+code_challenge_method=S256
+
+如果业务需要钱包地址，则 scope 调整为：
+
+openid profile wallet
+
+如果业务不需要积分、余额等信息，不建议默认申请 token:read。
+
+3.2 处理回调
+
+/auth/semi/callback 负责：
+
+1. 接收 Semi 返回的 code 和 state
+2. 校验 state 是否有效
+3. 取出对应的 code_verifier
+4. 使用 code + code_verifier 向 Semi token 接口换取 token
+5. 使用 access_token 请求 Semi userinfo
+6. 根据 userinfo.sub 查找外部身份绑定关系
+7. 绑定已有用户或创建新用户
+8. 签发我方系统自己的 session / JWT
+9. 跳转回前端业务页面
+
+我方系统后续接口鉴权应继续使用自己的登录态，不应直接依赖 Semi 的 access_token。
+
+4. 用户模型调整
+
+现有用户表不建议直接使用 Semi 的 handle、wallet_address、手机号或邮箱作为唯一标识。
+
+Semi 用户在我方系统内应通过：
+
+provider + provider_subject
+
+进行唯一识别。
+
+建议新增外部身份绑定表：
+
+CREATE TABLE external_identities (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  provider VARCHAR(64) NOT NULL,
+  provider_subject VARCHAR(255) NOT NULL,
+  handle VARCHAR(255),
+  wallet_address VARCHAR(255),
+  phone_verified BOOLEAN,
+  email_verified BOOLEAN,
+  scopes_granted_json JSON,
+  access_token_encrypted TEXT,
+  refresh_token_encrypted TEXT,
+  access_token_expires_at DATETIME,
+  refresh_token_expires_at DATETIME,
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL,
+  UNIQUE KEY uniq_provider_subject (provider, provider_subject)
+);
+
+其中：
+
+provider = semi
+provider_subject = Semi userinfo 返回的 sub
+
+本地用户和 Semi 身份之间是一种绑定关系，而不是用 Semi 身份完全替代本地用户体系。
+
+5. 登录态设计调整
+
+Semi 登录成功后，系统不应把 Semi access_token 直接返回给前端作为业务 token。
+
+推荐方式是：
+
+Semi 登录成功
+  ↓
+后端获取 Semi 用户信息
+  ↓
+后端绑定或创建本地用户
+  ↓
+后端签发我方系统自己的 session / JWT
+  ↓
+前端继续使用我方原有登录态访问业务接口
+
+Semi 的 token 只用于：
+
+1. 获取 Semi 用户信息
+2. 刷新 Semi 授权
+3. 后续调用 Semi 相关接口
+4. 解绑或吊销授权
+
+Semi token 应加密存储在服务端，避免暴露给浏览器。
+
+6. Token 管理调整
+
+Semi 的 refresh token 存在轮换机制，每次刷新后会返回新的 refresh token，旧 refresh token 会失效。
+
+因此后端刷新 token 时需要注意并发安全：
+
+1. 对当前 external_identity 加锁
+2. 使用当前 refresh_token 发起刷新请求
+3. 成功后原子更新 access_token 和 refresh_token
+4. 失败时不要重复使用旧 refresh_token 盲目重试
+
+否则在并发请求场景下，可能出现一个请求刷新成功，另一个请求继续使用旧 refresh token 导致失败，从而误判用户授权失效。
+
+7. 配置项调整
+
+后端需要新增 Semi 相关配置：
+
+SEMI_ISSUER=https://api.semi.im
+SEMI_AUTHORIZATION_URL=https://api.semi.im/oauth/authorize
+SEMI_TOKEN_URL=https://api.semi.im/oauth/token
+SEMI_USERINFO_URL=https://api.semi.im/oauth/userinfo
+SEMI_JWKS_URL=https://api.semi.im/oauth/jwks
+
+SEMI_CLIENT_ID=xxx
+SEMI_CLIENT_SECRET=xxx
+SEMI_REDIRECT_URI=https://your-domain.com/auth/semi/callback
+SEMI_SCOPES=openid profile
+
+如果需要钱包信息：
+
+SEMI_SCOPES=openid profile wallet
+
+需要注意：
+
+1. client_secret 只能保存在后端
+2. redirect_uri 必须和 Semi 应用后台配置完全一致
+3. 生产环境必须使用 HTTPS
+4. 不同环境建议分别配置不同 redirect_uri
+8. 安全调整
+
+本次接入需要补充以下安全机制：
+
+1. 使用 state 防止 CSRF 攻击
+2. 使用 PKCE，code_challenge_method 必须为 S256
+3. code_verifier 只在服务端临时保存
+4. authorization code 只能使用一次
+5. client_secret 不允许进入前端代码
+6. Semi token 服务端加密存储
+7. Cookie 设置 HttpOnly、Secure、SameSite
+8. 回调地址严格校验
+9. 登录失败日志需要脱敏
+
+如需在本地验证 Semi 返回的 JWT，可通过 JWKS 校验签名，并校验：
+
+iss
+aud
+exp
+iat
+kid
+9. 账号绑定策略
+
+需要支持以下几种场景：
+
+9.1 未登录用户使用 Semi 登录
+1. 根据 provider = semi 和 sub 查询绑定关系
+2. 如果已绑定，则登录对应本地用户
+3. 如果未绑定，则创建新本地用户
+4. 创建 external_identity 绑定记录
+9.2 已登录用户绑定 Semi
+1. 当前用户已登录
+2. 发起 Semi 授权
+3. 回调后获取 Semi sub
+4. 如果该 sub 未被其他用户绑定，则绑定到当前用户
+5. 如果已被其他用户绑定，则提示该 Semi 账号已被占用
+9.3 用户解绑 Semi
+1. 判断用户是否还有其他可用登录方式
+2. 如允许解绑，则吊销 Semi token
+3. 删除或禁用 external_identity 绑定关系
+4. 保留必要审计日志
+
+如果 Semi 是该用户唯一登录方式，需要谨慎允许解绑，避免用户无法再次登录。
+
+10. 错误处理调整
+
+后端需要识别并处理以下错误：
+
+invalid_request
+invalid_client
+invalid_grant
+unauthorized_client
+invalid_scope
+access_denied
+token_expired
+userinfo_failed
+state_mismatch
+
+建议对用户展示统一、可理解的提示，例如：
+
+登录失败，请重新尝试
+授权已取消
+登录状态已过期，请重新登录
+当前账号暂不可使用乡建数字身份登录
+
+同时后端日志中记录具体错误码，方便排查，但不得记录明文 token、client_secret、authorization code。
+
+11. 发布与联调注意事项
+
+上线前需要完成以下检查：
+
+1. Semi 应用后台已创建应用
+2. 应用状态已启用
+3. client_id 和 client_secret 已配置到服务端
+4. redirect_uri 与我方后端回调地址完全一致
+5. scope 与业务需求一致
+6. 前端按钮跳转到我方后端登录入口
+7. 后端能够正确完成 code 换 token
+8. 后端能够通过 userinfo 获取 sub
+9. 本地用户能够正确创建或绑定
+10. 我方登录态能够正常签发
+11. token 刷新逻辑经过并发测试
+12. 解绑逻辑经过验证
+12. 最终调整后的登录架构
+前端
+  |
+  | 点击 Semi 登录
+  v
+我方后端 /auth/semi/login
+  |
+  | 生成 state、code_verifier、code_challenge
+  v
+Semi 授权页
+  |
+  | 用户确认授权
+  v
+我方后端 /auth/semi/callback
+  |
+  | 校验 state
+  | code 换 token
+  | 获取 userinfo
+  | 绑定 / 创建本地用户
+  | 签发我方登录态
+  v
+前端业务页面
+
+调整后，系统中存在两类 token：
+
+1. Semi token
+   - 用于访问 Semi 相关接口
+   - 服务端保存
+   - 不直接暴露给前端
+
+2. 我方系统 token / session
+   - 用于访问我方业务接口
+   - 由我方后端签发
+   - 前端继续按原有方式使用
+13. 总结
+
+本次兼容乡建数字身份 / Semi 登录体系，主要调整点如下：
+
+1. 新增 OAuth2 + PKCE 登录流程
+2. 前端只负责登录入口和跳转
+3. 后端负责授权、换 token、获取用户信息和签发本地登录态
+4. 新增 external_identity 外部身份绑定表
+5. 使用 Semi userinfo.sub 作为第三方身份唯一标识
+6. Semi token 服务端加密保存
+7. 我方业务系统继续使用自己的登录态
+8. refresh token 轮换需要做并发安全处理
+9. 支持账号绑定、解绑和异常处理
+10. 上线前需要重点验证 redirect_uri、scope、token 交换和用户绑定流程
