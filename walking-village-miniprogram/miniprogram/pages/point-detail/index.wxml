@@ -1,9 +1,107 @@
 <view class="page-bg point-page safe-bottom">
-  <view class="top-row"><button class="round-btn back-btn" bindtap="goBack">‹</button><view class="station-pill">第 <text>{{point.order}}</text> 站 / 共 {{route.pointCount}} 站</view></view>
-  <image class="point-hero" src="{{point.image}}" mode="aspectFill"></image><view class="dots"><text></text><text></text><text></text></view>
-  <view class="content"><text class="point-title">{{point.name}} ✨</text><view class="meta"><text>📍 {{point.location}}</text><text>◷ 建议停留 {{point.duration}}</text></view>
-    <view class="soft-card story-card"><view class="card-title">📖 点位故事</view><text class="story-text">{{point.story}}</text><text class="highlight">{{point.highlight}}</text><button class="primary-btn audio-btn" bindtap="goAudio"><text>☻</text><view><text>AI 讲解</text><text class="sub">听听这个地方的故事</text></view><text>›</text></button></view>
-    <view class="soft-card task-card"><view class="card-title">✅ 互动任务</view><view class="task-row"><view class="camera-illus">📷</view><view><text class="task-text">{{point.task}}</text><button class="record-btn" bindtap="goPublish">📷 {{point.taskButtonText}}</button></view></view></view>
-    <button class="primary-btn next-btn" bindtap="goNext" hover-class="btn-hover"><text>➤</text><text>{{isLast?'生成故事报告':'前往下一站'}}</text><text>›</text></button>
+  <view class="top-row">
+    <button class="round-btn back-btn" bindtap="goBack">‹</button>
+    <view class="station-pill">第 <text>{{point.order}}</text> 站 / 共 {{route.pointCount}} 站</view>
+  </view>
+
+  <!-- Banner轮播图 -->
+  <view class="banner-section">
+    <swiper
+      class="point-swiper"
+      indicator-dots="{{true}}"
+      indicator-color="rgba(255, 255, 255, 0.5)"
+      indicator-active-color="#ff7a00"
+      autoplay="{{false}}"
+      circular="{{false}}"
+      bindchange="onSwiperChange"
+    >
+      <swiper-item>
+        <image class="swiper-img" src="{{point.image}}" mode="aspectFill"></image>
+      </swiper-item>
+      <swiper-item wx:if="{{point.image2}}">
+        <image class="swiper-img" src="{{point.image2}}" mode="aspectFill"></image>
+      </swiper-item>
+      <swiper-item wx:if="{{point.image3}}">
+        <image class="swiper-img" src="{{point.image3}}" mode="aspectFill"></image>
+      </swiper-item>
+      <!-- 默认补充展示点位故事卡片作为轮播项 -->
+      <swiper-item>
+        <view class="story-slide">
+          <text class="slide-label">📍 点位故事</text>
+          <text class="slide-title">{{point.name}}</text>
+          <text class="slide-story">{{point.story}}</text>
+          <text class="slide-highlight">{{point.highlight}}</text>
+        </view>
+      </swiper-item>
+    </swiper>
+    <view class="swiper-counter">{{swiperCurrent + 1}} / {{swiperTotal}}</view>
+  </view>
+
+  <!-- 距离下一个点的距离显示 -->
+  <view class="distance-section" wx:if="{{!isLast && distanceToNext}}">
+    <view class="distance-card">
+      <view class="distance-icon">📍</view>
+      <view class="distance-info">
+        <text class="distance-label">距离下一站</text>
+        <text class="distance-name">{{nextPointName}}</text>
+      </view>
+      <view class="distance-value">
+        <text class="distance-num">{{distanceToNext}}</text>
+        <text class="distance-unit">米</text>
+      </view>
+      <view class="walk-time" wx:if="{{walkTime}}">
+        <text>◷ 步行约 {{walkTime}} 分钟</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="content">
+    <text class="point-title">{{point.name}} ✨</text>
+    <view class="meta">
+      <text>📍 {{point.location}}</text>
+      <text>◷ 建议停留 {{point.duration}}</text>
+    </view>
+
+    <view class="soft-card story-card">
+      <view class="card-title">📖 点位故事</view>
+      <text class="story-text">{{point.story}}</text>
+      <text class="highlight">{{point.highlight}}</text>
+
+      <!-- AI讲解按钮 - 点击直接播放语音 -->
+      <button class="primary-btn audio-btn" bindtap="playAIAudio">
+        <text>{{isPlaying ? 'Ⅱ' : '☻'}}</text>
+        <view>
+          <text>AI 讲解</text>
+          <text class="sub">{{isPlaying ? '正在播放...' : '听听这个地方的故事'}}</text>
+        </view>
+        <text>›</text>
+      </button>
+
+      <!-- 语音播放进度条 -->
+      <view class="audio-progress" wx:if="{{isPlaying}}">
+        <view class="progress-bar">
+          <view class="progress-fill" style="width: {{audioProgress}}%"></view>
+        </view>
+        <text class="progress-time">{{audioCurrentTime}} / {{audioDuration}}</text>
+        <button class="stop-btn" bindtap="stopAIAudio">停止</button>
+      </view>
+    </view>
+
+    <view class="soft-card task-card">
+      <view class="card-title">✅ 互动任务</view>
+      <view class="task-row">
+        <view class="camera-illus">📷</view>
+        <view>
+          <text class="task-text">{{point.task}}</text>
+          <button class="record-btn" bindtap="goPublish">📷 {{point.taskButtonText}}</button>
+        </view>
+      </view>
+    </view>
+
+    <button class="primary-btn next-btn" bindtap="goNext" hover-class="btn-hover">
+      <text>➤</text>
+      <text>{{isLast ? '生成故事报告' : '前往下一站'}}</text>
+      <text>›</text>
+    </button>
   </view>
 </view>

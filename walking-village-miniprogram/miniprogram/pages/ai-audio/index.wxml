@@ -1,5 +1,56 @@
 <view class="page-bg audio-page safe-bottom">
-  <view class="top-row"><button class="round-btn back-btn" bindtap="goBack">‹</button><text class="page-title">AI 语音讲解</text></view>
-  <view class="audio-header"><text class="big-title"><text class="orange-title">会走路</text>的村庄</text><view class="subtitle-line">AI 实地叙事导览 Agent</view></view>
-  <view class="soft-card audio-panel"><text class="talking">正在讲解：{{point.name}}背后的乡建故事</text><view class="player"><image src="{{avatar}}"></image><view><text class="bot-name">小路 AI 导览员 <text class="ai-tag">AI</text></text><text class="bot-sub">会走路的村庄 · 专属讲解伙伴</text></view></view><button class="play-btn" bindtap="togglePlay">{{playing?'Ⅱ':'▶'}}</button><view class="progress-row"><text>{{currentText}}</text><view class="progress"><view style="width:{{progress}}%"></view></view><text>03:48</text><button class="speed" bindtap="changeSpeed">{{speed}}x</button></view><view class="wave {{playing?'playing':''}}"><block wx:for="{{bars}}" wx:key="*this"><text style="height:{{item}}rpx"></text></block></view><button class="expand" bindtap="toggleText">▣ {{showText?'收起讲解文字':'展开讲解文字'}}⌄</button><view wx:if="{{showText}}" class="script-card"><text class="script-title">💬 讲解文字（节选）</text><text class="script-text">{{point.aiAudioText}}</text></view><view class="task-remind">🔔 相关任务提醒：{{point.task}}（0/1） ›</view></view>
+  <view class="top-row">
+    <button class="round-btn back-btn" bindtap="goBack">‹</button>
+    <text class="page-title">AI 语音讲解</text>
+  </view>
+
+  <view class="audio-header">
+    <text class="big-title"><text class="orange-title">会走路</text>的村庄</text>
+    <view class="subtitle-line">AI 实地叙事导览 Agent</view>
+  </view>
+
+  <view class="soft-card audio-panel">
+    <text class="talking">正在讲解：{{point.name}}背后的乡建故事</text>
+
+    <view class="player">
+      <image src="{{avatar}}"></image>
+      <view>
+        <text class="bot-name">小路 AI 导览员 <text class="ai-tag">AI</text></text>
+        <text class="bot-sub">会走路的村庄 · 专属讲解伙伴</text>
+      </view>
+    </view>
+
+    <button class="play-btn" bindtap="togglePlay">
+      <text class="play-icon">{{playing ? 'Ⅱ' : '▶'}}</text>
+    </button>
+
+    <view class="progress-row">
+      <text>{{currentText}}</text>
+      <view class="progress">
+        <view style="width:{{progress}}%"></view>
+      </view>
+      <text>{{durationText}}</text>
+      <button class="speed" bindtap="changeSpeed">{{speed}}x</button>
+    </view>
+
+    <!-- 波形动画 -->
+    <view class="wave {{playing ? 'playing' : ''}}">
+      <block wx:for="{{bars}}" wx:key="*this">
+        <text style="height:{{item}}rpx"></text>
+      </block>
+    </view>
+
+    <button class="expand" bindtap="toggleText">
+      ▣ {{showText ? '收起讲解文字' : '展开讲解文字'}}⌄
+    </button>
+
+    <view wx:if="{{showText}}" class="script-card">
+      <text class="script-title">💬 讲解文字（节选）</text>
+      <text class="script-text">{{point.aiAudioText}}</text>
+    </view>
+
+    <view class="task-remind" bindtap="goToTask">
+      🔔 相关任务提醒：{{point.task}}（0/1） ›
+    </view>
+  </view>
 </view>

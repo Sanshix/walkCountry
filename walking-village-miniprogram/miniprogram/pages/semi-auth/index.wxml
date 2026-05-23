@@ -1,0 +1,57 @@
+<view class="semi-auth-page">
+  <view class="loading-container" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">正在加载授权页面...</text>
+  </view>
+
+  <view class="error-container" wx:if="{{error}}">
+    <text class="error-icon">⚠️</text>
+    <text class="error-title">加载失败</text>
+    <text class="error-desc">{{errorMsg}}</text>
+    <button class="retry-btn" bindtap="retryLoad">重试</button>
+    <button class="back-btn" bindtap="goBack">返回</button>
+  </view>
+
+  <!-- 方案说明：如果web-view不可用，显示手动授权流程 -->
+  <view class="manual-auth" wx:if="{{showManualAuth}}">
+    <view class="manual-header">
+      <text class="manual-title">Semi 乡建数字身份登录</text>
+      <text class="manual-desc">请按以下步骤完成授权</text>
+    </view>
+
+    <view class="steps">
+      <view class="step-item">
+        <view class="step-num">1</view>
+        <text class="step-text">点击下方按钮复制授权链接</text>
+      </view>
+      <button class="copy-btn" bindtap="copyAuthUrl">复制授权链接</button>
+
+      <view class="step-item">
+        <view class="step-num">2</view>
+        <text class="step-text">在浏览器中打开链接完成授权</text>
+      </view>
+
+      <view class="step-item">
+        <view class="step-num">3</view>
+        <text class="step-text">授权成功后，返回小程序并输入授权码</text>
+      </view>
+
+      <view class="auth-code-input">
+        <text class="input-label">授权码</text>
+        <input
+          class="code-input"
+          placeholder="请输入授权成功后显示的授权码"
+          value="{{authCode}}"
+          bindinput="onAuthCodeInput"
+        />
+      </view>
+
+      <button class="submit-btn" bindtap="submitAuthCode">确认登录</button>
+    </view>
+
+    <button class="back-btn" bindtap="goBack">返回登录页</button>
+  </view>
+
+  <!-- WebView授权页面（需要配置业务域名白名单） -->
+  <web-view wx:if="{{authUrl && !showManualAuth}}" src="{{authUrl}}" bindmessage="onWebViewMessage" binderror="onWebViewError"></web-view>
+</view>

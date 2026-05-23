@@ -6,6 +6,9 @@ function setLoginInfo(info) {
     isLogin: Boolean(info.isLogin),
     nickName: info.nickName || '游客',
     avatarUrl: info.avatarUrl || '',
+    openid: info.openid || '',
+    walletAddress: info.walletAddress || '',
+    accessToken: info.accessToken || '',
     loginTime: info.loginTime || Date.now()
   }
 
@@ -25,6 +28,16 @@ function isLoggedIn() {
 function isGuest() {
   const info = getLoginInfo()
   return !info || info.mode === 'guest'
+}
+
+function isSemiLogin() {
+  const info = getLoginInfo()
+  return info && info.mode === 'semi'
+}
+
+function getWalletAddress() {
+  const info = getLoginInfo()
+  return info?.walletAddress || ''
 }
 
 function setGuestLogin() {
@@ -47,6 +60,8 @@ module.exports = {
   getLoginInfo,
   isLoggedIn,
   isGuest,
+  isSemiLogin,
+  getWalletAddress,
   setGuestLogin,
   clearLoginInfo
 }

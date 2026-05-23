@@ -8,6 +8,9 @@ Page({
     titleOk: true,
     roadOk: true,
     safeTopStyle: '',
+    showProfileModal: false,
+    tempAvatarUrl: '',
+    tempNickName: '',
     assets: {
       bg: `${imageBase}/login-bg.png`,
       logoTitle: `${imageBase}/login-logo-title.png`,
@@ -38,79 +41,125 @@ Page({
     })
   },
 
+  // 点击微信登录按钮 - 显示弹窗
   handleWechatLogin() {
+    this.setData({
+      showProfileModal: true,
+      tempAvatarUrl: '',
+      tempNickName: ''
+    })
+  },
+
+  // 选择头像
+  onChooseAvatar(e) {
+    const avatarUrl = e.detail.avatarUrl
+    this.setData({ tempAvatarUrl: avatarUrl })
+  },
+
+  // 输入昵称
+  onNicknameInput(e) {
+    this.setData({ tempNickName: e.detail.value })
+  },
+
+  // 昵称输入框失焦
+  onNicknameBlur(e) {
+    if (e.detail.value) {
+      this.setData({ tempNickName: e.detail.value })
+    }
+  },
+
+  // 关闭弹窗
+  closeProfileModal() {
+    this.setData({
+      showProfileModal: false,
+      tempAvatarUrl: '',
+      tempNickName: ''
+    })
+  },
+
+  // 确认微信登录
+  confirmProfile() {
+    const { tempAvatarUrl, tempNickName } = this.data
+
+    // 昵称可以为空，使用默认值
+    const nickName = tempNickName || '微信用户'
+    const avatarUrl = tempAvatarUrl || ''
+
     wx.showLoading({
       title: '正在登录...',
       mask: true
     })
 
-    wx.login({
-      success: (loginRes) => {
-        if (!loginRes || !loginRes.code) {
-          this.enterGuestFallback()
-          return
-        }
+    // 尝试云函数，失败则使用本地存储
+    this.tryCloudLogin(nickName, avatarUrl)
+  },
 
-        this.tryCloudLogin(loginRes.code)
-      },
-      fail: () => {
-        this.enterGuestFallback()
+  // 尝试云函数登录
+  async tryCloudLogin(nickName, avatarUrl) {
+    try {
+      // 检查云开发是否可用
+      if (!wx.cloud) {
+        console.log('wx.cloud 不可用，使用本地登录')
+        this.localLoginSuccess(nickName, avatarUrl)
+        return
       }
-    })
-  },
 
-  tryCloudLogin(code) {
-    if (!wx.cloud || !wx.cloud.callFunction) {
-      this.mockWechatLogin()
-      return
+      // 尝试调用云函数
+      const res = await wx.cloud.callFunction({
+        name: 'userLogin',
+        data: {
+          action: 'login',
+          nickName: nickName,
+          avatarUrl: avatarUrl
+        }
+      })
+
+      const result = res?.result || {}
+      const userData = result.data || {}
+
+      // 云函数成功
+      this.loginSuccess(
+        userData.nickName || nickName,
+        userData.avatarUrl || avatarUrl,
+        userData.openid || ''
+      )
+    } catch (err) {
+      console.error('云函数登录失败，使用本地登录:', err)
+      // 云函数失败，使用本地存储
+      this.localLoginSuccess(nickName, avatarUrl)
     }
-
-    wx.cloud.callFunction({
-      name: 'userLogin',
-      data: { code }
-    })
-      .then((res) => {
-        const result = res && res.result ? res.result : {}
-
-        auth.setLoginInfo({
-          mode: 'wechat',
-          isLogin: true,
-          nickName: result.nickName || '微信用户',
-          avatarUrl: result.avatarUrl || '',
-          loginTime: Date.now()
-        })
-
-        wx.hideLoading()
-        wx.showToast({
-          title: '登录成功',
-          icon: 'success'
-        })
-
-        this.goHome()
-      })
-      .catch(() => {
-        this.mockWechatLogin()
-      })
   },
 
-  mockWechatLogin() {
+  // 本地登录成功（云函数不可用时的降级方案）
+  localLoginSuccess(nickName, avatarUrl) {
+    this.loginSuccess(nickName, avatarUrl, '')
+  },
+
+  // 登录成功处理
+  loginSuccess(nickName, avatarUrl, openid) {
     auth.setLoginInfo({
       mode: 'wechat',
       isLogin: true,
-      nickName: '微信用户',
-      avatarUrl: '',
+      nickName: nickName,
+      avatarUrl: avatarUrl,
+      openid: openid,
       loginTime: Date.now()
     })
 
     wx.hideLoading()
+    this.setData({ showProfileModal: false })
+
     wx.showToast({
       title: '登录成功',
       icon: 'success'
     })
 
-    this.goHome()
+    setTimeout(() => {
+      this.goHome()
+    }, 800)
   },
 
+  // 游客登录
   handleGuestLogin() {
     auth.setGuestLogin()
 
@@ -119,32 +168,34 @@ Page({
       icon: 'none'
     })
 
-    this.goHome()
-  },
-
-  enterGuestFallback() {
-    auth.setGuestLogin()
-
-    wx.hideLoading()
-    wx.showToast({
-      title: '已进入游客体验',
-      icon: 'none'
-    })
-
-    this.goHome()
-  },
-
-  goHome() {
     setTimeout(() => {
-      wx.redirectTo({
-        url: '/pages/home/index',
-        fail: () => {
-          wx.reLaunch({
-            url: '/pages/home/index'
-          })
-        }
-      })
+      this.goHome()
     }, 500)
+  },
+
+  // Semi登录
+  handleSemiLogin() {
+    wx.navigateTo({
+      url: '/pages/semi-auth/index',
+      fail: () => {
+        wx.showToast({
+          title: '打开授权页面失败',
+          icon: 'none'
+        })
+      }
+    })
+  },
+
+  // 跳转首页
+  goHome() {
+    wx.redirectTo({
+      url: '/pages/home/index',
+      fail: () => {
+        wx.reLaunch({
+          url: '/pages/home/index'
+        })
+      }
+    })
   },
 
   handleTipClick() {
@@ -155,20 +206,14 @@ Page({
   },
 
   onBgError() {
-    this.setData({
-      bgOk: false
-    })
+    this.setData({ bgOk: false })
   },
 
   onTitleError() {
-    this.setData({
-      titleOk: false
-    })
+    this.setData({ titleOk: false })
   },
 
   onRoadError() {
-    this.setData({
-      roadOk: false
-    })
+    this.setData({ roadOk: false })
   }
 })

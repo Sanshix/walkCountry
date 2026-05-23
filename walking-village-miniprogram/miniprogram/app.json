@@ -9,7 +9,8 @@
     "pages/point-detail/index",
     "pages/ai-audio/index",
     "pages/publish/index",
-    "pages/report/index"
+    "pages/report/index",
+    "pages/semi-auth/index"
   ],
   "window": {
     "navigationStyle": "custom",

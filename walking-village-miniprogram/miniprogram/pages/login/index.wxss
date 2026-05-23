@@ -443,3 +443,197 @@ button::after {
   transform: scale(0.982);
   opacity: 0.9;
 }
+
+/* Semi 登录按钮样式 */
+.semi-option {
+  border: 3rpx solid rgba(92, 128, 188, 0.76);
+}
+
+.semi-title {
+  color: #5c80bc;
+}
+
+/* 用户信息收集弹窗 */
+.profile-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  position: relative;
+  z-index: 1001;
+  width: 580rpx;
+  padding: 48rpx 40rpx;
+  border-radius: 32rpx;
+  background: #fffaf0;
+  box-shadow: 0 24rpx 50rpx rgba(99, 65, 26, 0.2);
+}
+
+.modal-header {
+  text-align: center;
+  margin-bottom: 40rpx;
+}
+
+.modal-title {
+  display: block;
+  color: #5a2f14;
+  font-size: 36rpx;
+  font-weight: 900;
+  letter-spacing: 2rpx;
+}
+
+.modal-desc {
+  display: block;
+  margin-top: 16rpx;
+  color: rgba(95, 68, 45, 0.68);
+  font-size: 26rpx;
+}
+
+.modal-body {
+  padding: 20rpx 0;
+}
+
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 32rpx;
+  justify-content: center;
+}
+
+.avatar-btn {
+  position: relative;
+  width: 140rpx !important;
+  height: 140rpx !important;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  line-height: 1;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.avatar-btn::after {
+  border: none;
+}
+
+.avatar-img {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 50%;
+  border: 4rpx solid #ef7b13;
+}
+
+.avatar-placeholder {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 50%;
+  border: 4rpx solid #ef7b13;
+  background: #fff2d7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder-icon {
+  font-size: 60rpx;
+  color: #c4a76c;
+}
+
+.avatar-edit {
+  position: absolute;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  background: #ef7b13;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-icon {
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.avatar-tip {
+  margin-top: 16rpx;
+  color: rgba(95, 68, 45, 0.68);
+  font-size: 24rpx;
+}
+
+.nickname-section {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 2rpx solid rgba(228, 169, 92, 0.38);
+}
+
+.nickname-label {
+  color: #5a2f14;
+  font-size: 28rpx;
+  font-weight: 600;
+  width: 80rpx;
+}
+
+.nickname-input {
+  flex: 1;
+  height: 60rpx;
+  color: #5a2f14;
+  font-size: 30rpx;
+  padding-left: 20rpx;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 40rpx;
+  gap: 20rpx;
+}
+
+.modal-btn {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  border-radius: 24rpx;
+  font-size: 30rpx;
+  font-weight: 700;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.modal-btn::after {
+  border: none;
+}
+
+.cancel-btn {
+  background: rgba(255, 253, 247, 0.88);
+  border: 2rpx solid rgba(185, 111, 38, 0.62);
+  color: #5a2f14;
+}
+
+.confirm-btn {
+  background: linear-gradient(135deg, #ef7b13, #f4a24a);
+  color: #fff;
+}
+.semi-option{
+  margin-top: 28rpx;
+}
